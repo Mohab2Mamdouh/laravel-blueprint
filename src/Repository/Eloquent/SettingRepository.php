@@ -1,9 +1,9 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Repository\Eloquent;
+namespace Mohab\LaravelBlueprint\Repository\Eloquent;
 
-use Mohab2Mamdouh\LaravelStarter\Models\Setting;
-use Mohab2Mamdouh\LaravelStarter\Repository\Contracts\SettingRepositoryInterface;
+use Mohab\LaravelBlueprint\Models\Setting;
+use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

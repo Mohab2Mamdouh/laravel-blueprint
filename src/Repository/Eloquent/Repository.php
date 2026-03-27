@@ -1,9 +1,9 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Repository\Eloquent;
+namespace Mohab\LaravelBlueprint\Repository\Eloquent;
 
-use Mohab2Mamdouh\LaravelStarter\Enums\QueryReturnType;
-use Mohab2Mamdouh\LaravelStarter\Repository\Contracts\RepositoryInterface;
+use Mohab\LaravelBlueprint\Enums\QueryReturnType;
+use Mohab\LaravelBlueprint\Repository\Contracts\RepositoryInterface;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

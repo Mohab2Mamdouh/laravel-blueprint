@@ -1,9 +1,9 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Http\Services;
+namespace Mohab\LaravelBlueprint\Http\Services;
 
-use Mohab2Mamdouh\LaravelStarter\Http\Requests\SettingRequest;
-use Mohab2Mamdouh\LaravelStarter\Repository\Contracts\SettingRepositoryInterface;
+use Mohab\LaravelBlueprint\Http\Requests\SettingRequest;
+use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;

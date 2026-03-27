@@ -1,8 +1,8 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Casts;
+namespace Mohab\LaravelBlueprint\Casts;
 
-use Mohab2Mamdouh\LaravelStarter\Traits\HumanDates;
+use Mohab\LaravelBlueprint\Traits\HumanDates;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;

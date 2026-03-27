@@ -143,7 +143,7 @@ php artisan make:seeder CreateAdminUser
 Controls how a repository query returns results:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Enums\QueryReturnType;
+use Mohab\LaravelBlueprint\Enums\QueryReturnType;
 
 // Returns an Eloquent Collection
 $repository->query(returnType: QueryReturnType::GET);
@@ -164,7 +164,7 @@ $results = $query->where('status', 'active')->get();
 Static helper for building consistent JSON API responses:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Helpers\Responser;
+use Mohab\LaravelBlueprint\Helpers\Responser;
 
 // 200 success
 return Responser::success(200, 'User created', $user);
@@ -188,7 +188,7 @@ Register in `bootstrap/app.php` (Laravel 11+):
 ```php
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
-        'set.locale' => \Mohab2Mamdouh\LaravelStarter\Http\Middleware\SetLocale::class,
+        'set.locale' => \Mohab\LaravelBlueprint\Http\Middleware\SetLocale::class,
     ]);
 })
 ```
@@ -207,7 +207,7 @@ return [
 A JSON resource collection that returns standardised pagination metadata:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Http\Resources\PaginationCollection;
+use Mohab\LaravelBlueprint\Http\Resources\PaginationCollection;
 
 // Without transformation
 return new PaginationCollection($paginatedModels);
@@ -237,7 +237,7 @@ Response shape:
 The package ships a full settings module:
 
 - **Migration** — creates the `settings` table with `key`, `value` (JSON), `validation` (JSON), timestamps, and soft deletes.
-- **Model** — `Mohab2Mamdouh\LaravelStarter\Models\Setting`
+- **Model** — `Mohab\LaravelBlueprint\Models\Setting`
 - **Repository Interface** — `SettingRepositoryInterface` (bound to `SettingRepository` via the service provider)
 - **Controller** — `SettingController` with `edit`, `update`, and `createBackup` actions
 - **Service** — `SettingService` for business logic
@@ -248,7 +248,7 @@ The package ships a full settings module:
 Extend `BaseModel` to get soft deletes, human-readable dates, translatable fallback, and actor tracking out of the box:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Models\BaseModel;
+use Mohab\LaravelBlueprint\Models\BaseModel;
 
 class Product extends BaseModel
 {
@@ -262,7 +262,7 @@ class Product extends BaseModel
 Extend the abstract `Repository` class to implement your data-access layer:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Repository\Eloquent\Repository;
+use Mohab\LaravelBlueprint\Repository\Eloquent\Repository;
 use App\Repository\Contracts\ProductRepositoryInterface;
 
 class ProductRepository extends Repository implements ProductRepositoryInterface
@@ -283,7 +283,7 @@ Available methods: `query`, `getAll`, `getActive`, `getById`, `get`, `first`, `g
 Automatically sets `created_by` to the authenticated user's ID on model creation, and provides a `creator()` relationship:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Traits\Actor;
+use Mohab\LaravelBlueprint\Traits\Actor;
 
 class Post extends Model
 {
@@ -298,7 +298,7 @@ $post->creator; // BelongsTo → User
 Adds `values()` and `fromName()` helpers to PHP enums:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Traits\Enumable;
+use Mohab\LaravelBlueprint\Traits\Enumable;
 
 enum Status: string
 {
@@ -317,7 +317,7 @@ Status::fromName('Active'); // Status::Active
 Formats `created_at`, `updated_at`, and `email_verified_at` as locale-aware human-readable strings (e.g. `27 Mar, 2026, 03:45 PM`):
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Traits\HumanDates;
+use Mohab\LaravelBlueprint\Traits\HumanDates;
 
 class Post extends Model
 {
@@ -332,7 +332,7 @@ $post->created_at; // "27 Mar, 2026, 03:45 PM"
 Extends `spatie/laravel-translatable` with automatic fallback to the first available language when the requested locale is missing:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Traits\TranslatableFallback;
+use Mohab\LaravelBlueprint\Traits\TranslatableFallback;
 
 class Category extends Model
 {
@@ -347,7 +347,7 @@ class Category extends Model
 Apply locale-aware date formatting to any model attribute via an Eloquent cast:
 
 ```php
-use Mohab2Mamdouh\LaravelStarter\Casts\FormattedDateTime;
+use Mohab\LaravelBlueprint\Casts\FormattedDateTime;
 
 class Order extends Model
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Traits;
+namespace Mohab\LaravelBlueprint\Traits;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;

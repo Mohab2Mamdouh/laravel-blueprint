@@ -1,8 +1,8 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Http\Requests;
+namespace Mohab\LaravelBlueprint\Http\Requests;
 
-use Mohab2Mamdouh\LaravelStarter\Repository\Contracts\SettingRepositoryInterface;
+use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SettingRequest extends FormRequest

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Commands;
+namespace Mohab\LaravelBlueprint\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;

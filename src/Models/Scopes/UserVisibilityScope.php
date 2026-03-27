@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Models\Scopes;
+namespace Mohab\LaravelBlueprint\Models\Scopes;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Helpers;
+namespace Mohab\LaravelBlueprint\Helpers;
 
 use Exception;
 use Illuminate\Support\Facades\Log;

@@ -1,13 +1,13 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Models;
+namespace Mohab\LaravelBlueprint\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Mohab2Mamdouh\LaravelStarter\Models\Scopes\UserVisibilityScope;
-use Mohab2Mamdouh\LaravelStarter\Traits\Actor;
-use Mohab2Mamdouh\LaravelStarter\Traits\HumanDates;
-use Mohab2Mamdouh\LaravelStarter\Traits\TranslatableFallback;
+use Mohab\LaravelBlueprint\Models\Scopes\UserVisibilityScope;
+use Mohab\LaravelBlueprint\Traits\Actor;
+use Mohab\LaravelBlueprint\Traits\HumanDates;
+use Mohab\LaravelBlueprint\Traits\TranslatableFallback;
 
 class BaseModel extends Model
 {

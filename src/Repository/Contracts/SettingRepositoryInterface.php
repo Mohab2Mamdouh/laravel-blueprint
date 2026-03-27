@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Repository\Contracts;
+namespace Mohab\LaravelBlueprint\Repository\Contracts;
 
 interface SettingRepositoryInterface extends RepositoryInterface
 {

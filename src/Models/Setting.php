@@ -1,10 +1,10 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Models;
+namespace Mohab\LaravelBlueprint\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Mohab2Mamdouh\LaravelStarter\Traits\HumanDates;
+use Mohab\LaravelBlueprint\Traits\HumanDates;
 
 class Setting extends Model
 {

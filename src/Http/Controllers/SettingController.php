@@ -1,10 +1,10 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Http\Controllers;
+namespace Mohab\LaravelBlueprint\Http\Controllers;
 
 use Illuminate\Routing\Controller;
-use Mohab2Mamdouh\LaravelStarter\Http\Requests\SettingRequest;
-use Mohab2Mamdouh\LaravelStarter\Http\Services\SettingService;
+use Mohab\LaravelBlueprint\Http\Requests\SettingRequest;
+use Mohab\LaravelBlueprint\Http\Services\SettingService;
 use Illuminate\Contracts\View\View;
 
 class SettingController extends Controller

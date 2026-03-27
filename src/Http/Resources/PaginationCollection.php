@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Http\Resources;
+namespace Mohab\LaravelBlueprint\Http\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 

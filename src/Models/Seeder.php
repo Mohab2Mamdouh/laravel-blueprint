@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Models;
+namespace Mohab\LaravelBlueprint\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

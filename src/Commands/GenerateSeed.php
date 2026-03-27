@@ -1,8 +1,8 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Commands;
+namespace Mohab\LaravelBlueprint\Commands;
 
-use Mohab2Mamdouh\LaravelStarter\Models\Seeder;
+use Mohab\LaravelBlueprint\Models\Seeder;
 use Illuminate\Console\Command;
 
 class GenerateSeed extends Command

@@ -1,9 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "mohab2mamdouh/laravel-starter",
-    "version": "1.0.0",
+    "name": "mohab/laravel-blueprint",
     "description": "A Laravel starter package providing repository pattern commands, seeders, settings, base models, traits, and more.",
-    "keywords": ["laravel", "starter", "repository-pattern", "scaffolding"],
+    "keywords": ["laravel", "starter", "repository-pattern", "scaffolding", "blueprint"],
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -13,7 +12,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/console": "^11.0|^12.0",
         "illuminate/database": "^11.0|^12.0",
@@ -22,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Mohab2Mamdouh\\LaravelStarter\\": "src/"
+            "Mohab\\LaravelBlueprint\\": "src/"
         },
         "files": [
             "src/Helpers/helpers.php"
@@ -31,7 +30,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Mohab2Mamdouh\\LaravelStarter\\StarterServiceProvider"
+                "Mohab\\LaravelBlueprint\\BlueprintServiceProvider"
             ]
         }
     },

@@ -1,8 +1,8 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Enums;
+namespace Mohab\LaravelBlueprint\Enums;
 
-use Mohab2Mamdouh\LaravelStarter\Traits\Enumable;
+use Mohab\LaravelBlueprint\Traits\Enumable;
 
 enum QueryReturnType: string
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab2Mamdouh\LaravelStarter\Http\Middleware;
+namespace Mohab\LaravelBlueprint\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -16,7 +16,7 @@ class SetLocale
     {
         $locale = Session::get('locale', config('app.locale'));
 
-        $supportedLocales = config('starter.supported_locales', ['en', 'ar']);
+        $supportedLocales = config('blueprint.supported_locales', ['en', 'ar']);
 
         if (in_array($locale, $supportedLocales)) {
             App::setLocale($locale);
