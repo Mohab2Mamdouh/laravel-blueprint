@@ -1,6 +1,6 @@
-# mohab2mamdouh/laravel-starter
+# mohab/laravel-blueprint
 
-A Laravel starter package that provides a complete foundation for rapid application development. Install once, reuse everywhere.
+A Laravel blueprint package that provides a complete foundation for rapid application development. Install once, reuse everywhere.
 
 ---
 
@@ -26,7 +26,7 @@ A Laravel starter package that provides a complete foundation for rapid applicat
 
 ## Requirements
 
-- PHP ^8.2
+- PHP ^8.3
 - Laravel ^11.0 or ^12.0
 - `spatie/laravel-translatable` ^6.0
 
@@ -36,7 +36,7 @@ A Laravel starter package that provides a complete foundation for rapid applicat
 
 ### Option A — Local path (recommended during development)
 
-1. Copy or symlink this package into your project (e.g. `packages/mohab2mamdouh/laravel-starter`).
+1. Copy or symlink this package into your project (e.g. `packages/mohab/laravel-blueprint`).
 
 2. Register the path repository in your project's `composer.json`:
 
@@ -44,27 +44,47 @@ A Laravel starter package that provides a complete foundation for rapid applicat
 "repositories": [
     {
         "type": "path",
-        "url": "packages/mohab2mamdouh/laravel-starter"
+        "url": "packages/mohab/laravel-blueprint"
     }
 ],
 "require": {
-    "mohab2mamdouh/laravel-starter": "*"
+    "mohab/laravel-blueprint": "*"
 }
 ```
 
 3. Run:
 
 ```bash
-composer require mohab2mamdouh/laravel-starter
+composer require mohab/laravel-blueprint
 ```
 
-### Option B — Packagist
+### Option B — Private GitHub Repository
+
+Add the repository source to your project's `composer.json`:
+
+```json
+"repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/Mohab2Mamdouh/laravel-blueprint"
+    }
+]
+```
+
+Then run:
 
 ```bash
-composer require mohab2mamdouh/laravel-starter
+composer require mohab/laravel-blueprint
 ```
 
-The package is auto-discovered by Laravel. The `StarterServiceProvider` is registered automatically.
+> A GitHub personal access token with **Contents read-only** permission on this repository is required.
+> Store it via the `COMPOSER_AUTH` environment variable:
+>
+> ```env
+> COMPOSER_AUTH={"github-oauth":{"github.com":"your-token-here"}}
+> ```
+
+The package is auto-discovered by Laravel. The `BlueprintServiceProvider` is registered automatically.
 
 ---
 
@@ -74,6 +94,24 @@ Run the package migrations to create the `seeders` and `settings` tables:
 
 ```bash
 php artisan migrate
+```
+
+---
+
+## Configuration
+
+The package works out of the box with sensible defaults. To publish the config file and override them:
+
+```bash
+php artisan vendor:publish --tag=blueprint-config
+```
+
+This creates `config/blueprint.php` in your project:
+
+```php
+return [
+    'supported_locales' => ['en', 'ar'],
+];
 ```
 
 ---
@@ -118,11 +156,11 @@ Run all unapplied seeders from `database/seeders/RunningSeeder`. Seeders are tra
 php artisan generate:seed
 ```
 
-Seeder files should follow the naming convention `TIMESTAMP^ClassName.php`, e.g.:
+Seeder files must follow the naming convention `TIMESTAMP_ClassName.php`, e.g.:
 
 ```
-1704067200^CreateAdminUser.php
-2026-01-25^SeedPermissions.php
+1704067200_CreateAdminUser.php
+1706227200_SeedPermissions.php
 ```
 
 ### `make:seeder`
@@ -193,10 +231,9 @@ Register in `bootstrap/app.php` (Laravel 11+):
 })
 ```
 
-Supported locales default to `['en', 'ar']`. Override via config:
+Supported locales default to `['en', 'ar']`. Override via `config/blueprint.php`:
 
 ```php
-// config/starter.php
 return [
     'supported_locales' => ['en', 'ar', 'fr'],
 ];
@@ -308,7 +345,7 @@ enum Status: string
     case Inactive = 'inactive';
 }
 
-Status::values();        // ['active', 'inactive']
+Status::values();           // ['active', 'inactive']
 Status::fromName('Active'); // Status::Active
 ```
 
