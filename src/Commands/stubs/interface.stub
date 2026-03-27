@@ -1,0 +1,8 @@
+<?php
+
+namespace Modules\{{ ModuleName }}\app\Repository\Contracts\v{{ Version }};
+
+interface {{ PatternName }}RepositoryInterface extends RepositoryInterface
+{
+    // Define any additional methods specific to {{ PatternName }}RepositoryInterface here
+}

@@ -1,0 +1,12 @@
+<?php
+
+namespace Modules\{{ ModuleName }}\app\Repository\Contracts\v{{ Version }};
+
+interface {{ PatternName }}RepositoryInterface extends RepositoryInterface
+{
+    public function getAll();
+    public function getById($id);
+    public function create(array $data);
+    public function update($id, array $data);
+    public function delete($id);
+}

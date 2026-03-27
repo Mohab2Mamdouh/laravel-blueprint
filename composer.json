@@ -1,0 +1,40 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "mohab2mamdouh/laravel-starter",
+    "version": "1.0.0",
+    "description": "A Laravel starter package providing repository pattern commands, seeders, settings, base models, traits, and more.",
+    "keywords": ["laravel", "starter", "repository-pattern", "scaffolding"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Mohab Mamdouh",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/console": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/http": "^11.0|^12.0",
+        "spatie/laravel-translatable": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mohab2Mamdouh\\LaravelStarter\\": "src/"
+        },
+        "files": [
+            "src/Helpers/helpers.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mohab2Mamdouh\\LaravelStarter\\StarterServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

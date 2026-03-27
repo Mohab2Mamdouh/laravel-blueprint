@@ -1,0 +1,16 @@
+<?php
+
+namespace Modules\{{ ModuleName }}\app\Repository\Eloquent\v{{ Version }};
+
+use Modules\{{ ModuleName }}\app\Repository\Contracts\v{{ Version }}\{{ PatternName }}RepositoryInterface;
+
+class {{ PatternName }}Repository extends Repository implements {{ PatternName }}RepositoryInterface
+{
+   protected Model $model;
+
+   public function __construct({{ PatternName }} $model)
+   {
+       parent::__construct($model);
+   }
+
+}

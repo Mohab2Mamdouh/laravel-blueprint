@@ -1,0 +1,44 @@
+<?php
+
+namespace Modules\{{ ModuleName }}\app\Http\Controllers\v{{ Version }};
+
+use App\Http\Controllers\Controller;
+use Modules\{{ ModuleName }}\app\Http\Services\v{{ Version }}\{{ PatternName }}Service;
+use Illuminate\Http\Request;
+
+class {{ ModuleName }}Controller extends Controller
+{
+    public function __construct(
+        private readonly {{ PatternName }}Service $service
+    ) {}
+
+    public function index()
+    {
+        $data = $this->service->getAll();
+        return response()->json($data);
+    }
+
+    public function store(Request $request)
+    {
+        $result = $this->service->create($request->all());
+        return response()->json($result);
+    }
+
+    public function show($id)
+    {
+        $data = $this->service->getById($id);
+        return response()->json($data);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $result = $this->service->update($id, $request->all());
+        return response()->json($result);
+    }
+
+    public function destroy($id)
+    {
+        $result = $this->service->delete($id);
+        return response()->json($result);
+    }
+}
