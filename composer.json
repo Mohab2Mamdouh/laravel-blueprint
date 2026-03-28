@@ -30,7 +30,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Mohab\\LaravelBlueprint\\BlueprintServiceProvider"
+                "Mohab\\LaravelBlueprint\\BlueprintServiceProvider",
+                "Mohab\\LaravelBlueprint\\BlueprintViewServiceProvider",
+                "Mohab\\LaravelBlueprint\\BlueprintCommandServiceProvider",
+                "Mohab\\LaravelBlueprint\\BlueprintRepositoryServiceProvider"
             ]
         }
     },

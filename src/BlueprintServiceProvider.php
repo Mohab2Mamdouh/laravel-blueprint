@@ -19,11 +19,6 @@ class BlueprintServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__ . '/../config/blueprint.php', 'blueprint'
         );
-
-        $this->app->bind(
-            SettingRepositoryInterface::class,
-            SettingRepository::class
-        );
     }
 
     /**
@@ -36,13 +31,5 @@ class BlueprintServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/blueprint.php' => config_path('blueprint.php'),
         ], 'blueprint-config');
-
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                AddRepositoryPatternCommand::class,
-                GenerateSeed::class,
-                MakeSeederCommand::class,
-            ]);
-        }
     }
 }
