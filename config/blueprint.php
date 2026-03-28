@@ -11,4 +11,14 @@ return [
     */
     'supported_locales' => ['en', 'ar'],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Auto Publish
+    |--------------------------------------------------------------------------
+    | When true the package will attempt to copy config and lang files into
+    | the consuming application automatically if they are missing. This can
+    | be disabled by setting `blueprint.auto_publish` to false in the app.
+    */
+    'auto_publish' => true,
+
 ];
