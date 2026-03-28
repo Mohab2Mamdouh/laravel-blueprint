@@ -18,17 +18,15 @@ readonly class SettingService
     /**
      * Return the settings edit view.
      */
-    public function edit(): View
+    public function settings(): array
     {
-        $settings = $this->repository->query()->pluck('value', 'key')->toArray();
-
-        return view('starter::settings.form', compact('settings'));
+        return $this->repository->settings();
     }
 
     /**
      * Persist the validated settings data.
      */
-    public function update(SettingRequest $request): RedirectResponse
+    public function update(SettingRequest $request): bool
     {
         $data = $request->validated();
 
@@ -43,7 +41,7 @@ readonly class SettingService
             Cache::forget('view.websiteSettings');
         }
 
-        return redirect()->back()->with('success', 'Settings updated successfully');
+        return true;
     }
 
     /**
