@@ -33,7 +33,8 @@
                 "Mohab\\LaravelBlueprint\\BlueprintServiceProvider",
                 "Mohab\\LaravelBlueprint\\BlueprintViewServiceProvider",
                 "Mohab\\LaravelBlueprint\\BlueprintCommandServiceProvider",
-                "Mohab\\LaravelBlueprint\\BlueprintRepositoryServiceProvider"
+                "Mohab\\LaravelBlueprint\\BlueprintRepositoryServiceProvider",
+                "Mohab\\LaravelBlueprint\\BlueprintTranslationsServiceProvider"
             ]
         }
     },
