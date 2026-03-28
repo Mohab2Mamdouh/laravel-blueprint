@@ -86,6 +86,8 @@ composer require mohab/laravel-blueprint
 
 The package is auto-discovered by Laravel. The `BlueprintServiceProvider` is registered automatically.
 
+Note: the package now consolidates its functionality into a single service provider: `Mohab\\LaravelBlueprint\\BlueprintServiceProvider`. Several smaller providers used during development have been merged to simplify maintenance — you only need the one provider registered (auto-discovery handles this).
+
 ---
 
 ## Migrations
@@ -114,7 +116,53 @@ return [
 ];
 ```
 
+Auto-publish
+------------
+
+For convenience the package will attempt to auto-publish its configuration and translation files into the consuming application when they are missing. This behavior is enabled by default and controlled by the `blueprint.auto_publish` config value (default: `true`).
+
+How it works:
+- On provider boot, if `config('blueprint.auto_publish')` is true and the config file or translations directory is not present in the app, the package will copy `config/blueprint.php` to `config/` and `src/lang` to `resources/lang/vendor/blueprint`.
+- The operation is safe — it is wrapped with checks and will fail silently if writing files is not possible (for example, during certain bootstrap contexts).
+
+To disable auto-publish, publish the config and set the option to false:
+
+```bash
+php artisan vendor:publish --tag=blueprint-config
+```
+
+Then in `config/blueprint.php`:
+
+```php
+'auto_publish' => false,
+```
+
 ---
+
+## Translations
+
+The package ships translations under `src/lang`. Translations are loaded with the `blueprint` namespace so you can reference them safely from your app without colliding with other packages.
+
+- Namespaced PHP translation usage (recommended):
+
+```php
+// In PHP
+__('blueprint::public.hello');
+
+// In Blade
+@lang('blueprint::public.hello')
+```
+
+- Publish translations to override them in the application:
+
+```bash
+php artisan vendor:publish --provider="Mohab\\LaravelBlueprint\\BlueprintServiceProvider" --tag=blueprint-lang
+```
+
+- JSON translations: If you provide JSON translation files in `src/lang`, they will be loaded via `loadJsonTranslationsFrom` and can be used with `__('some_key')`. JSON keys are global (not namespaced) and therefore more likely to collide — prefer namespaced PHP translation files when possible.
+
+- Validation messages: Laravel's validator reads `validation.php` from the app locale directory by default. If you provide `validation.php` in the package, consumers should publish it to the app to make the messages available as app-level defaults. Alternatively, reference package-namespaced validation keys directly in FormRequest `messages()`.
+
 
 ## Artisan Commands
 
