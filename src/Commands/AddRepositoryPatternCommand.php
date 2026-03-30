@@ -339,7 +339,7 @@ class AddRepositoryPatternCommand extends Command
         $providerPath = "{$modulePath}/app/Providers/{$moduleName}ServiceProvider.php";
 
         if (!File::exists($providerPath)) {
-            $this->warn("{$moduleName}ServiceProvider not found — skipping RepositoryServiceProvider registration.");
+            $this->warn("{$modulePath}/app/Providers/{$moduleName}ServiceProvider.php not found — skipping RepositoryServiceProvider registration.");
             return;
         }
 
