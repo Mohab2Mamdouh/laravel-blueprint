@@ -382,7 +382,7 @@ class AddRepositoryPatternCommand extends Command
             $providersInner = $matches[1];
 
             // Add new provider with proper indentation
-            $newLine = "        RepositoryServiceProvider::class,\n";
+            $newLine = "RepositoryServiceProvider::class,\n";
 
             $updatedProvidersBlock = str_replace(
                 $providersInner,
