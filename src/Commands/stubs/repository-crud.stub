@@ -3,6 +3,7 @@
 namespace Modules\{{ ModuleName }}\app\Repository\Eloquent\v{{ Version }};
 
 use Modules\{{ ModuleName }}\app\Repository\Contracts\v{{ Version }}\{{ PatternName }}RepositoryInterface;
+use Mohab\LaravelBlueprint\Repository\Eloquent\RepositoryInterface;
 
 class {{ PatternName }}Repository extends Repository implements {{ PatternName }}RepositoryInterface
 {

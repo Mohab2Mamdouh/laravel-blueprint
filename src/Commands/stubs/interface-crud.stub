@@ -2,6 +2,8 @@
 
 namespace Modules\{{ ModuleName }}\app\Repository\Contracts\v{{ Version }};
 
+use Mohab\LaravelBlueprint\Repository\Contracts\RepositoryInterface;
+
 interface {{ PatternName }}RepositoryInterface extends RepositoryInterface
 {
     public function getAll();
