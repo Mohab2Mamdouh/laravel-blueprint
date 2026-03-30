@@ -339,55 +339,79 @@ class AddRepositoryPatternCommand extends Command
         $providerPath = "{$modulePath}/app/Providers/{$moduleName}ServiceProvider.php";
 
         if (!File::exists($providerPath)) {
-            $this->warn("{$modulePath}/app/Providers/{$moduleName}ServiceProvider.php not found — skipping RepositoryServiceProvider registration.");
+            $this->warn("{$providerPath} not found — skipping RepositoryServiceProvider registration.");
             return;
         }
 
         $content = File::get($providerPath);
 
-        // Guard — already registered.
-        if (str_contains($content, 'RepositoryServiceProvider')) {
+        // ------------------------------------------------------------------
+        // 0. Guard — already registered
+        // ------------------------------------------------------------------
+        if (str_contains($content, 'RepositoryServiceProvider::class')) {
             $this->line("  <comment>Skipped:</comment> {$moduleName}ServiceProvider already registers RepositoryServiceProvider.");
             return;
         }
 
+        // ------------------------------------------------------------------
+        // 1. Inject use statement
+        // ------------------------------------------------------------------
         $fqn          = "Modules\\{$moduleName}\\app\\Providers\\RepositoryServiceProvider";
         $useStatement = "use {$fqn};\n";
 
-        // ------------------------------------------------------------------
-        // 1. Inject the use-statement.
-        // ------------------------------------------------------------------
-        if (preg_match_all('/^use [^;]+;$/m', $content, $matches, PREG_OFFSET_CAPTURE)) {
-            $lastMatch = end($matches[0]);
-            $insertAt  = $lastMatch[1] + strlen($lastMatch[0]);
-            $content   = substr($content, 0, $insertAt) . "\n" . $useStatement . substr($content, $insertAt);
-        } else {
-            $content = preg_replace(
-                '/^(namespace .+;)$/m',
-                "$1\n\n" . $useStatement,
-                $content,
-                1,
-            );
+        if (!str_contains($content, $fqn)) {
+            if (preg_match_all('/^use [^;]+;$/m', $content, $matches, PREG_OFFSET_CAPTURE)) {
+                $lastMatch = end($matches[0]);
+                $insertAt  = $lastMatch[1] + strlen($lastMatch[0]);
+                $content   = substr($content, 0, $insertAt) . "\n" . $useStatement . substr($content, $insertAt);
+            } else {
+                $content = preg_replace(
+                    '/^(namespace .+;)$/m',
+                    "$1\n\n" . $useStatement,
+                    $content,
+                    1,
+                );
+            }
         }
 
         // ------------------------------------------------------------------
-        // 2. Call $this->app->register() inside register().
+        // 2. Add to $providers array
         // ------------------------------------------------------------------
-        $registerLine = "        \$this->app->register(RepositoryServiceProvider::class);\n";
+        if (preg_match('/protected\s+array\s+\$providers\s*=\s*\[([\s\S]*?)\];/', $content, $matches)) {
+            $providersBlock = $matches[0];
+            $providersInner = $matches[1];
 
-        if (preg_match('/public function register\(\)[^{]*\{/', $content)) {
-            $content = preg_replace(
-                '/(public function register\(\)[^{]*\{)/',
-                "$1\n{$registerLine}",
-                $content,
-                1,
+            // Add new provider with proper indentation
+            $newLine = "        RepositoryServiceProvider::class,\n";
+
+            $updatedProvidersBlock = str_replace(
+                $providersInner,
+                $providersInner . $newLine,
+                $providersBlock
             );
+
+            $content = str_replace($providersBlock, $updatedProvidersBlock, $content);
+
+            $this->line("  <info>Updated:</info> Added RepositoryServiceProvider to \$providers in {$moduleName}ServiceProvider.");
         } else {
-            $this->warn("Could not locate register() in {$moduleName}ServiceProvider — skipping registration call.");
-            return;
+            // ------------------------------------------------------------------
+            // 3. If $providers does NOT exist → create it
+            // ------------------------------------------------------------------
+            $property = "\n    protected array \$providers = [\n        RepositoryServiceProvider::class,\n    ];\n";
+
+            $content = preg_replace(
+                '/class\s+' . $moduleName . 'ServiceProvider[^{]*\{/',
+                "$0" . $property,
+                $content,
+                1
+            );
+
+            $this->line("  <info>Added:</info> Created \$providers property in {$moduleName}ServiceProvider.");
         }
 
+        // ------------------------------------------------------------------
+        // 4. Save file
+        // ------------------------------------------------------------------
         File::put($providerPath, $content);
-        $this->line("  <info>Updated:</info> {$moduleName}ServiceProvider now registers RepositoryServiceProvider.");
     }
 }
