@@ -52,7 +52,11 @@ class AddRepositoryPatternCommand extends Command
         $this->deleteExistingPattern($modulePath, $patternName, $version);
         $this->addRepositoryPattern($modulePath, $studlyName, $patternName, $version, $stubSuffix);
         $this->updateController($modulePath, $studlyName, $patternName, $version, $stubSuffix);
-        $this->updateServiceProvider($modulePath, $studlyName, $patternName, $version);
+
+        // Register the binding in a dedicated RepositoryServiceProvider …
+        $this->updateRepositoryServiceProvider($modulePath, $studlyName, $patternName, $version);
+        // … then make sure that provider is booted by the module's main provider.
+        $this->registerRepositoryServiceProviderInModule($modulePath, $studlyName);
 
         if ($this->option('model')) {
             $this->createModel($modulePath, $studlyName, $patternName);
@@ -217,68 +221,173 @@ class AddRepositoryPatternCommand extends Command
     }
 
     // -------------------------------------------------------------------------
-    // Service-provider update
+    // RepositoryServiceProvider — create / update
     // -------------------------------------------------------------------------
 
-    private function updateServiceProvider(string $modulePath, string $moduleName, string $patternName, string|int $version): void
+    /**
+     * Ensure RepositoryServiceProvider exists for the module, then inject the
+     * interface→repository binding for the requested version + pattern name.
+     */
+    private function updateRepositoryServiceProvider(
+        string     $modulePath,
+        string     $moduleName,
+        string     $patternName,
+        string|int $version,
+    ): void {
+        $providerDir  = "{$modulePath}/app/Providers";
+        $providerPath = "{$providerDir}/RepositoryServiceProvider.php";
+
+        // Create the file from scratch when it doesn't exist yet.
+        if (!File::exists($providerPath)) {
+            if (!File::exists($providerDir)) {
+                File::makeDirectory($providerDir, 0755, true);
+            }
+            $this->createRepositoryServiceProvider($providerPath, $moduleName);
+        }
+
+        $content = File::get($providerPath);
+
+        $interfaceShort  = "{$patternName}RepositoryInterface";
+        $repositoryShort = "{$patternName}Repository";
+        $interfaceFqn    = "Modules\\{$moduleName}\\app\\Repository\\Contracts\\v{$version}\\{$interfaceShort}";
+        $repositoryFqn   = "Modules\\{$moduleName}\\app\\Repository\\Eloquent\\v{$version}\\{$repositoryShort}";
+        $versionedMarker = "v{$version}\\{$interfaceShort}";
+
+        // Guard — skip if this exact versioned binding is already registered.
+        if (str_contains($content, $versionedMarker)) {
+            $this->line("  <comment>Skipped:</comment> RepositoryServiceProvider already contains v{$version} binding for {$patternName}.");
+            return;
+        }
+
+        // ------------------------------------------------------------------
+        // 1. Inject use-statements after the last existing use line.
+        // ------------------------------------------------------------------
+        $useBlock = "use {$interfaceFqn};\nuse {$repositoryFqn};\n";
+
+        if (preg_match_all('/^use [^;]+;$/m', $content, $matches, PREG_OFFSET_CAPTURE)) {
+            // Insert right after the last use statement.
+            $lastMatch = end($matches[0]);
+            $insertAt  = $lastMatch[1] + strlen($lastMatch[0]);
+            $content   = substr($content, 0, $insertAt) . "\n" . $useBlock . substr($content, $insertAt);
+        } else {
+            // No use statements yet — add a blank line after the namespace declaration.
+            $content = preg_replace(
+                '/^(namespace .+;)$/m',
+                "$1\n\n" . $useBlock,
+                $content,
+                1,
+            );
+        }
+
+        // ------------------------------------------------------------------
+        // 2. Inject the bind() call into the register() method body.
+        // ------------------------------------------------------------------
+        $bindingLine = "        \$this->app->bind({$interfaceShort}::class, {$repositoryShort}::class);\n";
+
+        $content = preg_replace(
+            '/(public function register\(\)[^{]*\{)/',
+            "$1\n{$bindingLine}",
+            $content,
+            1,
+        );
+
+        File::put($providerPath, $content);
+        $this->line("  <info>Updated:</info> Providers/RepositoryServiceProvider.php — added v{$version} binding for {$patternName}.");
+    }
+
+    /**
+     * Scaffold an empty RepositoryServiceProvider for the given module.
+     */
+    private function createRepositoryServiceProvider(string $providerPath, string $moduleName): void
+    {
+        $content = <<<PHP
+        <?php
+
+        namespace Modules\\{$moduleName}\\app\\Providers;
+
+        use Illuminate\\Support\\ServiceProvider;
+
+        class RepositoryServiceProvider extends ServiceProvider
+        {
+            public function register(): void
+            {
+                //
+            }
+        }
+        PHP;
+
+        // Normalise indentation produced by the heredoc.
+        $content = implode("\n", array_map(
+            static fn (string $line) => preg_replace('/^\s{8}/', '', $line),
+            explode("\n", $content),
+        ));
+
+        File::put($providerPath, $content);
+        $this->line("  <info>Created:</info> Providers/RepositoryServiceProvider.php");
+    }
+
+    // -------------------------------------------------------------------------
+    // Module's main ServiceProvider — register RepositoryServiceProvider
+    // -------------------------------------------------------------------------
+
+    /**
+     * Add `$this->app->register(RepositoryServiceProvider::class)` to the
+     * module's primary ServiceProvider if it isn't already there.
+     */
+    private function registerRepositoryServiceProviderInModule(string $modulePath, string $moduleName): void
     {
         $providerPath = "{$modulePath}/app/Providers/{$moduleName}ServiceProvider.php";
 
         if (!File::exists($providerPath)) {
-            $this->warn("Service provider not found – skipping binding registration.");
+            $this->warn("{$moduleName}ServiceProvider not found — skipping RepositoryServiceProvider registration.");
             return;
         }
 
         $content = File::get($providerPath);
 
-        $interfaceFqn  = "Modules\\{$moduleName}\\app\\Repository\\Contracts\\v{$version}\\{$patternName}RepositoryInterface";
-        $repositoryFqn = "Modules\\{$moduleName}\\app\\Repository\\Eloquent\\v{$version}\\{$patternName}Repository";
-        $versionedMarker = "v{$version}\\{$patternName}RepositoryInterface";
-
-        // Skip if this exact versioned binding is already present
-        if (str_contains($content, $versionedMarker)) {
-            $this->line("  <comment>Skipped:</comment> Service provider already has v{$version} binding for {$patternName}.");
+        // Guard — already registered.
+        if (str_contains($content, 'RepositoryServiceProvider')) {
+            $this->line("  <comment>Skipped:</comment> {$moduleName}ServiceProvider already registers RepositoryServiceProvider.");
             return;
         }
 
-        // Build the binding line
-        $bindingLine = "        \$this->app->bind({$interfaceFqn}::class, {$repositoryFqn}::class);\n";
+        $fqn          = "Modules\\{$moduleName}\\app\\Providers\\RepositoryServiceProvider";
+        $useStatement = "use {$fqn};\n";
 
-        // Inject into register() method body
-        $registerPattern = '/public function register\(\)[^{]*\{/';
-        if (preg_match($registerPattern, $content)) {
-            $content = preg_replace(
-                $registerPattern,
-                "$1\n{$bindingLine}",
-                $content,
-                1
-            );
-        } else {
-            $this->warn("Could not locate register() method in service provider.");
-        }
-
-        // Add use statements after the last existing use statement (or after namespace)
-        $useStatements  = "use {$interfaceFqn};\n";
-        $useStatements .= "use {$repositoryFqn};\n";
-
-        if (preg_match('/^use .+;$/m', $content)) {
-            // Insert after the LAST use statement block
-            $content = preg_replace(
-                '/^(use [^;]+;)(\s*)(?!use )/m',
-                "$1\n{$useStatements}$2",
-                $content,
-                1
-            );
+        // ------------------------------------------------------------------
+        // 1. Inject the use-statement.
+        // ------------------------------------------------------------------
+        if (preg_match_all('/^use [^;]+;$/m', $content, $matches, PREG_OFFSET_CAPTURE)) {
+            $lastMatch = end($matches[0]);
+            $insertAt  = $lastMatch[1] + strlen($lastMatch[0]);
+            $content   = substr($content, 0, $insertAt) . "\n" . $useStatement . substr($content, $insertAt);
         } else {
             $content = preg_replace(
                 '/^(namespace .+;)$/m',
-                "$1\n\n{$useStatements}",
+                "$1\n\n" . $useStatement,
                 $content,
-                1
+                1,
             );
         }
 
+        // ------------------------------------------------------------------
+        // 2. Call $this->app->register() inside register().
+        // ------------------------------------------------------------------
+        $registerLine = "        \$this->app->register(RepositoryServiceProvider::class);\n";
+
+        if (preg_match('/public function register\(\)[^{]*\{/', $content)) {
+            $content = preg_replace(
+                '/(public function register\(\)[^{]*\{)/',
+                "$1\n{$registerLine}",
+                $content,
+                1,
+            );
+        } else {
+            $this->warn("Could not locate register() in {$moduleName}ServiceProvider — skipping registration call.");
+            return;
+        }
+
         File::put($providerPath, $content);
-        $this->line("  <info>Updated:</info> Service provider with v{$version} bindings.");
+        $this->line("  <info>Updated:</info> {$moduleName}ServiceProvider now registers RepositoryServiceProvider.");
     }
 }
