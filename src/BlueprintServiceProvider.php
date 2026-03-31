@@ -11,6 +11,8 @@ use Mohab\LaravelBlueprint\Commands\GenerateSeed;
 use Mohab\LaravelBlueprint\Commands\MakeSeederCommand;
 use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 use Mohab\LaravelBlueprint\Repository\Eloquent\SettingRepository;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Eloquent\Builder;
 
 class BlueprintServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,7 @@ class BlueprintServiceProvider extends ServiceProvider
         $this->bootTranslations();
         $this->bootCommands();
         $this->bootViews();
+        $this->bootShortcuts();
     }
 
     private function bootConfig(): void
@@ -97,20 +100,142 @@ class BlueprintServiceProvider extends ServiceProvider
 
     private function bootViews(): void
     {
-        View::composer('*', function ($view) {
+        $cacheConfig = config('blueprint.cache', []);
+
+        $useCache = $cacheConfig['enabled'] ?? null;
+        if (is_null($useCache)) {
             $useCache = !app()->environment('local');
+        }
 
+        $key = $cacheConfig['website_settings_key'] ?? 'view.websiteSettings';
+        $rememberForever = $cacheConfig['remember_forever'] ?? true;
+        $ttl = $cacheConfig['ttl'] ?? 3600;
+
+        try {
+            if ($useCache) {
+                $websiteSettings = $rememberForever
+                    ? Cache::rememberForever($key, fn () => resolve(SettingRepositoryInterface::class)->settings())
+                    : Cache::remember($key, $ttl, fn () => resolve(SettingRepositoryInterface::class)->settings());
+            } else {
+                $websiteSettings = resolve(SettingRepositoryInterface::class)->settings();
+            }
+        } catch (\Throwable $e) {
             $websiteSettings = resolve(SettingRepositoryInterface::class)->settings();
+        }
 
-            $view->with('websiteSettings', $useCache ? Cache::rememberForever('view.websiteSettings', fn() => $websiteSettings) : $websiteSettings);
-        });
+        View::share('websiteSettings', $websiteSettings);
     }
-
     private function registerRepository(): void
     {
         $this->app->bind(
             SettingRepositoryInterface::class,
             SettingRepository::class
         );
+    }
+
+    private function bootShortcuts(): void
+    {
+        // -------------------------------------------------------------------------
+        // Blueprint (migration) macros
+        // -------------------------------------------------------------------------
+
+        // Foreign key to users — column name is configurable for polymorphic scenarios
+        Blueprint::macro('userId', function (string $column = 'user_id') {
+            return $this->foreignId($column)
+                ->constrained('users')
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+        });
+
+        // Status string with default value and index
+        Blueprint::macro('status', function (string $default = 'active') {
+            return $this->string('status')->default($default)->index();
+        });
+
+        // Soft deletes + who deleted the record
+        Blueprint::macro('softDeletesWithUser', function () {
+            $this->softDeletes();
+            $this->foreignId('deleted_by')->nullable()->constrained('users');
+        });
+
+        // Audit columns — who created and last updated the record
+        Blueprint::macro('audit', function () {
+            $this->foreignId('created_by')->nullable()->constrained('users');
+            $this->foreignId('updated_by')->nullable()->constrained('users');
+        });
+
+        // Unique indexed slug
+        Blueprint::macro('slug', function () {
+            return $this->string('slug')->unique()->index();
+        });
+
+        // Nullable JSON meta bag
+        Blueprint::macro('meta', function () {
+            return $this->json('meta')->nullable();
+        });
+
+        // UUID column — unique, indexed, not nullable
+        Blueprint::macro('uuid', function (string $column = 'uuid') {
+            return $this->string($column, 36)->unique()->index();
+        });
+
+        // Nullable phone number
+        Blueprint::macro('phone', function (string $column = 'phone') {
+            return $this->string($column, 20)->nullable();
+        });
+
+        // Decimal price column
+        Blueprint::macro('price', function (string $column = 'price', int $total = 10, int $places = 2) {
+            return $this->decimal($column, $total, $places)->default(0);
+        });
+
+        // Unsigned integer for drag-and-drop ordering
+        Blueprint::macro('ordering', function (string $column = 'sort_order') {
+            return $this->unsignedInteger($column)->default(0)->index();
+        });
+
+        // Nullable, indexed timestamp for scheduled publishing
+        Blueprint::macro('publishedAt', function () {
+            return $this->timestamp('published_at')->nullable()->index();
+        });
+
+        // -------------------------------------------------------------------------
+        // Builder (query) macros
+        // -------------------------------------------------------------------------
+
+        // Active / inactive scopes — align with HasStatus defaults
+        Builder::macro('active', function (string $column = 'status') {
+            return $this->where($column, 'active');
+        });
+
+        Builder::macro('inactive', function (string $column = 'status') {
+            return $this->where($column, 'inactive');
+        });
+
+        // Multi-column LIKE search
+        Builder::macro('search', function (string $term, array $columns) {
+            return $this->where(function ($q) use ($term, $columns) {
+                foreach ($columns as $column) {
+                    $q->orWhere($column, 'like', "%{$term}%");
+                }
+            });
+        });
+
+        // Sort by ordering column
+        Builder::macro('ordered', function (string $column = 'sort_order') {
+            return $this->orderBy($column);
+        });
+
+        // Filter to rows that are published (published_at is set and in the past)
+        Builder::macro('published', function () {
+            return $this->whereNotNull('published_at')
+                ->where('published_at', '<=', now());
+        });
+
+        // Filter to scheduled rows (published_at is in the future)
+        Builder::macro('scheduled', function () {
+            return $this->whereNotNull('published_at')
+                ->where('published_at', '>', now());
+        });
     }
 }

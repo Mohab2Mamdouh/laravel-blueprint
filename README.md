@@ -6,21 +6,21 @@ A Laravel blueprint package that provides a complete foundation for rapid applic
 
 ## Contents
 
-| Component | Description |
-|-----------|-------------|
-| `AddRepositoryPatternCommand` | Artisan command to scaffold versioned Repository/Service/Controller pattern into a module |
-| `GenerateSeed` | Artisan command to run unapplied seeders from `database/seeders/RunningSeeder` |
-| `MakeSeederCommand` | Artisan command to create timestamp-prefixed seeders |
-| Stubs | Stub templates used by `AddRepositoryPatternCommand` |
-| `QueryReturnType` | Enum for controlling repository query return types |
-| `Responser` | Static helper for consistent JSON API responses |
-| `SetLocale` | Middleware to set the application locale from the session |
-| `PaginationCollection` | JSON resource collection with standardised pagination metadata |
-| Setting (migration, model, controller, service, interface, repo, request) | Full settings module out of the box |
-| `BaseModel` | Base Eloquent model with soft deletes, human dates, translatable fallback, and actor tracking |
-| `Repository` (contract + eloquent base) | Abstract repository with 20+ methods for clean data access |
-| Traits | `Actor`, `Enumable`, `HumanDates`, `TranslatableFallback` |
-| `FormattedDateTime` | Eloquent cast for locale-aware formatted date strings |
+| Section | Description |
+|---------|-------------|
+| Service Provider | Consolidated `BlueprintServiceProvider` (bootstraps config, migrations, translations, commands, views, and registers macros) |
+| Commands | Artisan commands: `module:add-repository`, `generate:seed`, `make:seeder` |
+| Configuration | `config/blueprint.php` and the package auto-publish behaviour |
+| Translations | Package translations under `src/lang` (namespaced `blueprint`) and publishing instructions |
+| Migrations | Package migrations (seeders table, settings table) |
+| Components | `QueryReturnType`, `Responser`, `LogHelper`, `PaginationCollection`, `FormattedDateTime` cast |
+| Settings Module | Migration, Model, Repository, Controller, Service, Request for application settings |
+| BaseModel & Traits | `BaseModel` and traits: `Actor`, `Enumable`, `HumanDates`, `TranslatableFallback`, `HasSlug`, `UploadImages` |
+| Repository Base | Repository contract + Eloquent base implementation for data access |
+| Stubs | Scaffolding stubs used by `AddRepositoryPatternCommand` |
+| Database shortcuts & macros | Blueprint and Builder macros registered by the provider (e.g. `userId`, `audit`, `search`) |
+| Usage & Examples | Integration snippets, middleware alias, and resource helpers |
+| Troubleshooting & License | Notes on auto-publish, troubleshooting, and license (MIT) |
 
 ---
 
@@ -41,14 +41,16 @@ A Laravel blueprint package that provides a complete foundation for rapid applic
 2. Register the path repository in your project's `composer.json`:
 
 ```json
-"repositories": [
+{
+  "repositories": [
     {
-        "type": "path",
-        "url": "packages/mohab/laravel-blueprint"
+      "type": "path",
+      "url": "packages/mohab/laravel-blueprint"
     }
-],
-"require": {
+  ],
+  "require": {
     "mohab/laravel-blueprint": "*"
+  }
 }
 ```
 
@@ -63,12 +65,14 @@ composer require mohab/laravel-blueprint
 Add the repository source to your project's `composer.json`:
 
 ```json
-"repositories": [
+{
+  "repositories": [
     {
-        "type": "vcs",
-        "url": "https://github.com/Mohab2Mamdouh/laravel-blueprint"
+      "type": "vcs",
+      "url": "https://github.com/Mohab2Mamdouh/laravel-blueprint"
     }
-]
+  ]
+}
 ```
 
 Then run:
@@ -86,13 +90,18 @@ composer require mohab/laravel-blueprint
 
 The package is auto-discovered by Laravel. The `BlueprintServiceProvider` is registered automatically.
 
-Note: the package now consolidates its functionality into a single service provider: `Mohab\\LaravelBlueprint\\BlueprintServiceProvider`. Several smaller providers used during development have been merged to simplify maintenance — you only need the one provider registered (auto-discovery handles this).
+Note on providers
+-----------------
+
+The package consolidates its functionality into a single service provider: `Mohab\\LaravelBlueprint\\BlueprintServiceProvider` (registered via composer auto-discovery). Internally the provider delegates bootstrap responsibilities to small private methods such as `bootConfig()`, `bootMigrations()`, `bootTranslations()`, `bootCommands()`, and `bootViews()`.
+
+This simplifies maintenance and makes integration predictable for consuming applications — you only need to worry about a single provider being present.
 
 ---
 
 ## Migrations
 
-Run the package migrations to create the `seeders` and `settings` tables:
+Run the package migrations to create the `seeders` and `settings` tables (and any future migrations provided by the package):
 
 ```bash
 php artisan migrate
@@ -108,33 +117,82 @@ The package works out of the box with sensible defaults. To publish the config f
 php artisan vendor:publish --tag=blueprint-config
 ```
 
-This creates `config/blueprint.php` in your project:
+This creates `config/blueprint.php` in your project. Example:
 
 ```php
 return [
     'supported_locales' => ['en', 'ar'],
+    'auto_publish' => true,
+
+    // Optional: size limit when LogHelper truncates exception traces
+    'logging' => [
+        'max_trace_length' => 5000,
+    ],
+
+    // View / cache related options used by the provider's view composer
+    'cache' => [
+        // null = use provider default (!app()->environment('local'))
+        'enabled' => null,
+        // cache key used when storing resolved website settings
+        'website_settings_key' => 'view.websiteSettings',
+        // when true the package uses Cache::rememberForever
+        'remember_forever' => true,
+    ],
 ];
 ```
 
 Auto-publish
 ------------
 
-For convenience the package will attempt to auto-publish its configuration and translation files into the consuming application when they are missing. This behavior is enabled by default and controlled by the `blueprint.auto_publish` config value (default: `true`).
+The package can auto-publish some of its files into the consuming application on first boot to make the package more plug-and-play. This behaviour is intended for convenience during initial integration and is enabled by default.
 
-How it works:
-- On provider boot, if `config('blueprint.auto_publish')` is true and the config file or translations directory is not present in the app, the package will copy `config/blueprint.php` to `config/` and `src/lang` to `resources/lang/vendor/blueprint`.
-- The operation is safe — it is wrapped with checks and will fail silently if writing files is not possible (for example, during certain bootstrap contexts).
+What is auto-published
+- `config/blueprint.php` => copied to your application's `config/` directory (when missing)
+- Translation files from `src/lang` => copied to `resources/lang/vendor/blueprint` (when the directory is missing)
 
-To disable auto-publish, publish the config and set the option to false:
+How it works
+- During provider boot the package checks `config('blueprint.auto_publish', true)`. When true and the target files/directories do not exist in the application, the package will attempt to copy the config and translation files into the app. The operation is safe and wrapped in try/catch blocks — if file system access is not available or writing fails the provider will continue without throwing errors.
+
+Configuration keys
+- `blueprint.auto_publish` (bool) — enable/disable the auto-publish behaviour. Default: `true`.
+- `blueprint.supported_locales` (array) — locales supported by middleware and helpers. Default: `['en', 'ar']`.
+- `blueprint.logging.max_trace_length` (int) — maximum characters to keep from exception traces when using the package `LogHelper`. Default: `5000`.
+ - `blueprint.cache.enabled` (bool|null) — control whether the package uses cache for the `websiteSettings` view binding. When `null` the provider uses its default behaviour (disable caching in `local` environment). Default: `null`.
+ - `blueprint.cache.website_settings_key` (string) — cache key used for website settings stored by the provider. Default: `view.websiteSettings`.
+ - `blueprint.cache.remember_forever` (bool) — when true the package uses `Cache::rememberForever` to persist settings; otherwise it will call `Cache::remember` (consumers must provide a TTL when `false`). Default: `true`.
+
+Disabling auto-publish
+
+1. Publish the config into your application so you can control package behaviour manually:
 
 ```bash
 php artisan vendor:publish --tag=blueprint-config
 ```
 
-Then in `config/blueprint.php`:
+2. Edit `config/blueprint.php` and set:
 
 ```php
 'auto_publish' => false,
+```
+
+Manual publishing
+
+Alternatively use Laravel's `vendor:publish` to selectively publish package assets. The package registers the following publish tags:
+
+- `blueprint-config` — publishes `config/blueprint.php`
+- `blueprint-lang` — publishes translations from `src/lang` to `resources/lang/vendor/blueprint`
+
+Examples:
+
+```bash
+# Publish config only
+php artisan vendor:publish --tag=blueprint-config
+
+# Publish translations only
+php artisan vendor:publish --tag=blueprint-lang
+
+# Publish by provider (both tags)
+php artisan vendor:publish --provider="Mohab\\LaravelBlueprint\\BlueprintServiceProvider"
 ```
 
 ---
@@ -163,6 +221,9 @@ php artisan vendor:publish --provider="Mohab\\LaravelBlueprint\\BlueprintService
 
 - Validation messages: Laravel's validator reads `validation.php` from the app locale directory by default. If you provide `validation.php` in the package, consumers should publish it to the app to make the messages available as app-level defaults. Alternatively, reference package-namespaced validation keys directly in FormRequest `messages()`.
 
+If you want to override package translation keys, publish them with the `blueprint-lang` tag and edit the files under `resources/lang/vendor/blueprint` in your application.
+
+---
 
 ## Artisan Commands
 
@@ -265,6 +326,29 @@ return Responser::fail(500, 'Something went wrong', [], $exception);
 return Responser::custom(201, 'Resource created', $data);
 ```
 
+### LogHelper
+
+A small wrapper around Laravel's logger that formats messages consistently and appends request/auth context automatically. Useful for logging caught exceptions and enriching logs with request metadata.
+
+Usage examples:
+
+```php
+use Mohab\\LaravelBlueprint\\Helpers\\LogHelper;
+
+LogHelper::info('Order processed', ['order_id' => $id]);
+
+try {
+    // ... something that throws
+} catch (\\Throwable $e) {
+    LogHelper::exception('PaymentService: charge failed', $e, ['order_id' => $id]);
+}
+```
+
+What it adds
+- Consistent event header formatting (e.g. "=== [PaymentService: charge failed] ===").
+- Automatically includes request metadata: `url`, `method`, `ip`, and `user_id` (nullable when not available).
+- Truncates long exception traces according to `blueprint.logging.max_trace_length` to avoid bloating logs.
+
 ### SetLocale Middleware
 
 Sets the application locale from the `locale` session key. Defaults to `config('app.locale')`.
@@ -274,7 +358,7 @@ Register in `bootstrap/app.php` (Laravel 11+):
 ```php
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->alias([
-        'set.locale' => \Mohab\LaravelBlueprint\Http\Middleware\SetLocale::class,
+        'set.locale' => \Mohab\\LaravelBlueprint\\Http\\Middleware\\SetLocale::class,
     ]);
 })
 ```
@@ -292,7 +376,7 @@ return [
 A JSON resource collection that returns standardised pagination metadata:
 
 ```php
-use Mohab\LaravelBlueprint\Http\Resources\PaginationCollection;
+use Mohab\\LaravelBlueprint\\Http\\Resources\\PaginationCollection;
 
 // Without transformation
 return new PaginationCollection($paginatedModels);
@@ -305,7 +389,7 @@ Response shape:
 
 ```json
 {
-  "items": [...],
+  "items": [],
   "pagination": {
     "current_page": 1,
     "last_page": 5,
@@ -322,7 +406,7 @@ Response shape:
 The package ships a full settings module:
 
 - **Migration** — creates the `settings` table with `key`, `value` (JSON), `validation` (JSON), timestamps, and soft deletes.
-- **Model** — `Mohab\LaravelBlueprint\Models\Setting`
+- **Model** — `Mohab\\LaravelBlueprint\\Models\\Setting`
 - **Repository Interface** — `SettingRepositoryInterface` (bound to `SettingRepository` via the service provider)
 - **Controller** — `SettingController` with `edit`, `update`, and `createBackup` actions
 - **Service** — `SettingService` for business logic
@@ -333,7 +417,7 @@ The package ships a full settings module:
 Extend `BaseModel` to get soft deletes, human-readable dates, translatable fallback, and actor tracking out of the box:
 
 ```php
-use Mohab\LaravelBlueprint\Models\BaseModel;
+use Mohab\\LaravelBlueprint\\Models\\BaseModel;
 
 class Product extends BaseModel
 {
@@ -347,8 +431,8 @@ class Product extends BaseModel
 Extend the abstract `Repository` class to implement your data-access layer:
 
 ```php
-use Mohab\LaravelBlueprint\Repository\Eloquent\Repository;
-use App\Repository\Contracts\ProductRepositoryInterface;
+use Mohab\\LaravelBlueprint\\Repository\\Eloquent\\Repository;
+use App\\Repository\\Contracts\\ProductRepositoryInterface;
 
 class ProductRepository extends Repository implements ProductRepositoryInterface
 {
@@ -368,7 +452,7 @@ Available methods: `query`, `getAll`, `getActive`, `getById`, `get`, `first`, `g
 Automatically sets `created_by` to the authenticated user's ID on model creation, and provides a `creator()` relationship:
 
 ```php
-use Mohab\LaravelBlueprint\Traits\Actor;
+use Mohab\\LaravelBlueprint\\Traits\\Actor;
 
 class Post extends Model
 {
@@ -383,7 +467,7 @@ $post->creator; // BelongsTo → User
 Adds `values()` and `fromName()` helpers to PHP enums:
 
 ```php
-use Mohab\LaravelBlueprint\Traits\Enumable;
+use Mohab\\LaravelBlueprint\\Traits\\Enumable;
 
 enum Status: string
 {
@@ -402,7 +486,7 @@ Status::fromName('Active'); // Status::Active
 Formats `created_at`, `updated_at`, and `email_verified_at` as locale-aware human-readable strings (e.g. `27 Mar, 2026, 03:45 PM`):
 
 ```php
-use Mohab\LaravelBlueprint\Traits\HumanDates;
+use Mohab\\LaravelBlueprint\\Traits\\HumanDates;
 
 class Post extends Model
 {
@@ -417,7 +501,7 @@ $post->created_at; // "27 Mar, 2026, 03:45 PM"
 Extends `spatie/laravel-translatable` with automatic fallback to the first available language when the requested locale is missing:
 
 ```php
-use Mohab\LaravelBlueprint\Traits\TranslatableFallback;
+use Mohab\\LaravelBlueprint\\Traits\\TranslatableFallback;
 
 class Category extends Model
 {
@@ -432,7 +516,7 @@ class Category extends Model
 Apply locale-aware date formatting to any model attribute via an Eloquent cast:
 
 ```php
-use Mohab\LaravelBlueprint\Casts\FormattedDateTime;
+use Mohab\\LaravelBlueprint\\Casts\\FormattedDateTime;
 
 class Order extends Model
 {
@@ -470,6 +554,59 @@ All stubs support three placeholder variables:
 | `{{ ModuleName }}` | The module name (StudlyCase) |
 | `{{ PatternName }}` | The custom pattern/entity name (StudlyCase) |
 | `{{ Version }}` | The version number |
+
+---
+
+## Database shortcuts & macros
+
+The service provider registers several helpful Blueprint and Builder macros that you can use in your migrations and query builders:
+
+- `Blueprint::userId()` — shorthand for a constrained `user_id` foreign id with cascade on delete/update
+- `Blueprint::status($default = 'active')` — string status column with default and index
+- `Blueprint::softDeletesWithUser()` — soft deletes plus `deleted_by` foreign id
+- `Blueprint::audit()` — sets `created_by` and `updated_by` foreign ids (nullable)
+- `Blueprint::slug()` — unique indexed `slug` column
+- `Blueprint::meta()` — nullable JSON `meta` column
+
+Builder macros:
+- `Builder::active($column = 'status')` — scope to only active rows
+- `Builder::inactive($column = 'status')` — scope to only inactive rows
+- `Builder::search($term, $columns)` — multi-column LIKE search helper
+
+These are registered in the provider method `bootShortCuts()`.
+
+---
+
+## Usage examples
+
+- Register the package's middleware alias (example in `bootstrap/app.php` for Laravel 11+):
+
+```php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->alias([
+        'set.locale' => \Mohab\\LaravelBlueprint\\Http\\Middleware\\SetLocale::class,
+    ]);
+})
+```
+
+- Use a repository:
+
+```php
+$products = resolve(App\\Repository\\Contracts\\ProductRepositoryInterface::class)->getAll();
+```
+
+- Use the PaginationCollection in a controller:
+
+```php
+return new PaginationCollection(Product::paginate(15), ProductResource::class);
+```
+
+---
+
+## Troubleshooting & notes
+
+- Auto-publish is a convenience feature. If you're developing multiple environments (CI, build servers, containers), prefer publishing the config and translations explicitly via `vendor:publish` and commit the resulting files to your app repository if needed.
+- The provider's auto-publish logic is defensive and will not throw in early bootstrap contexts where file helper functions may not be available.
 
 ---
 
