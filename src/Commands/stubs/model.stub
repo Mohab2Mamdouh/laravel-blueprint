@@ -2,7 +2,7 @@
 
 namespace Modules\{{ ModuleName }}\app\Models;
 
-use App\Models\BaseModel;
+use Mohab\LaravelBlueprint\Models\BaseModel;
 
 class {{ PatternName }} extends BaseModel
 {
