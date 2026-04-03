@@ -18,6 +18,11 @@ class {{ ModuleName }}Controller extends Controller
         return response()->json($data);
     }
 
+    public function create()
+    {
+        return view('{{ ModuleName }}::form');
+    }
+
     public function store(Request $request)
     {
         $result = $this->service->create($request->all());
@@ -28,6 +33,12 @@ class {{ ModuleName }}Controller extends Controller
     {
         $data = $this->service->getById($id);
         return response()->json($data);
+    }
+
+    public function edit($id)
+    {
+        $data = $this->service->getById($id);
+        return view('{{ ModuleName }}::form', compact('data'));
     }
 
     public function update(Request $request, $id)

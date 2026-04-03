@@ -107,8 +107,8 @@ class AddRepositoryPatternCommand extends Command
             }
         }
 
-        $this->createInterface($modulePath, $moduleName, $patternName, $version, $stubSuffix);
-        $this->createRepository($modulePath, $moduleName, $patternName, $version, $stubSuffix);
+        $this->createInterface($modulePath, $moduleName, $patternName, $version);
+        $this->createRepository($modulePath, $moduleName, $patternName, $version);
         $this->createService($modulePath, $moduleName, $patternName, $version, $stubSuffix);
     }
 
@@ -153,18 +153,18 @@ class AddRepositoryPatternCommand extends Command
     // Individual file generators
     // -------------------------------------------------------------------------
 
-    private function createInterface(string $modulePath, string $moduleName, string $patternName, string|int $version, string $stubSuffix = ''): void
+    private function createInterface(string $modulePath, string $moduleName, string $patternName, string|int $version): void
     {
-        $content     = $this->renderStub("interface{$stubSuffix}.stub", $this->replacements($moduleName, $patternName, $version));
+        $content     = $this->renderStub("interface.stub", $this->replacements($moduleName, $patternName, $version));
         $destination = "{$modulePath}/app/Repository/Contracts/v{$version}/{$patternName}RepositoryInterface.php";
 
         File::put($destination, $content);
         $this->line("  <info>Created:</info> Repository/Contracts/v{$version}/{$patternName}RepositoryInterface.php");
     }
 
-    private function createRepository(string $modulePath, string $moduleName, string $patternName, string|int $version, string $stubSuffix = ''): void
+    private function createRepository(string $modulePath, string $moduleName, string $patternName, string|int $version): void
     {
-        $content     = $this->renderStub("repository{$stubSuffix}.stub", $this->replacements($moduleName, $patternName, $version));
+        $content     = $this->renderStub("repository.stub", $this->replacements($moduleName, $patternName, $version));
         $destination = "{$modulePath}/app/Repository/Eloquent/v{$version}/{$patternName}Repository.php";
 
         File::put($destination, $content);

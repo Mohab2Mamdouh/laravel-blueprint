@@ -12,7 +12,7 @@ class {{ PatternName }}Service
 
     public function getAll()
     {
-        return $this->repository->getAll();
+        return $this->repository->query();
     }
 
     public function getById($id)
