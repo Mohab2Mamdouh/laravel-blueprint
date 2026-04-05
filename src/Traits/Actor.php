@@ -7,11 +7,23 @@ use Illuminate\Support\Facades\Auth;
 
 trait Actor
 {
+    /**
+     * Set to false on your model to skip created_by tracking entirely.
+     *
+     *   public bool $actor = false;
+     */
+    public bool $actor = true;
+
     protected static function bootActor(): void
     {
-        $user = Auth::user();
+        static::creating(function ($model): void {
+            // Respect the per-model opt-out flag.
+            if (!$model->actor) {
+                return;
+            }
 
-        static::creating(function ($model) use ($user) {
+            $user = Auth::user();
+
             if ($user) {
                 $model->created_by = $user->id;
             }
@@ -23,6 +35,9 @@ trait Actor
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(config('auth.providers.users.model', \App\Models\User::class), 'created_by');
+        return $this->belongsTo(
+            config('auth.providers.users.model', \App\Models\User::class),
+            'created_by',
+        );
     }
 }
