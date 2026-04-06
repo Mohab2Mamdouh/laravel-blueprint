@@ -6,8 +6,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use function Modules\Server\app\Traits\abort;
-use function Modules\Server\app\Traits\auth;
 
 trait BelongsToUser {
 
