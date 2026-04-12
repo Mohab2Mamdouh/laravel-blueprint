@@ -59,7 +59,7 @@ class SettingRepository extends Repository implements SettingRepositoryInterface
         $this->backupDatabase("{$tempPath}/db/database.sql");
         $this->backupStorage("{$tempPath}/storage");
 
-        $archivePath = storage_path("app/{$backupName}.tar.gz");
+        $archivePath = storage_path("app/{$backupName}.backup.gz");
         $this->createTarGz($tempPath, $archivePath);
 
         $this->updateLastBackup();

@@ -54,11 +54,13 @@ return [
     'show' => 'إظهار',
     'create' => 'إنشاء',
     'update' => 'تحديث',
+    'edit' => 'تعديل',
     'delete' => 'حذف',
     'restore' => 'استعادة',
     'cancel' => 'إلغاء',
     'settings' => 'الإعدادات',
     'view_all' => 'عرض الجميع',
+    'confirm_delete' => 'هل أنت متأكد من الحذف؟',
 
     'update_profile' => 'تحديث البيانات الشخصية',
     'logout' => 'تسجيل الخروج',
@@ -115,25 +117,8 @@ return [
 
     'coming_soon' => 'قريباً',
 
-    // Landing Page
-    'landing_badge'       => 'قالب Laravel 12',
-    'landing_headline'    => 'أطلق مشروعك أسرع.',
-    'landing_headline_2'  => 'ابنِ على أساس متين.',
-    'landing_subtitle'    => 'قالب Laravel جاهز مع المصادقة، صلاحيات الأدوار، البنية المعيارية، دعم متعدد اللغات، وبيئة Docker — جاهز من اليوم الأول.',
-    'get_started'         => 'ابدأ الآن',
-    'read_the_docs'       => 'اقرأ التوثيق',
-    'feature_auth'        => 'المصادقة والصلاحيات',
-    'feature_auth_desc'   => 'تسجيل الدخول والتسجيل والتحكم في الوصول عبر Laratrust — جاهز مباشرة.',
-    'feature_modular'     => 'بنية معيارية',
-    'feature_modular_desc'=> 'وحدات مستقلة عبر nwidart/laravel-modules. كل ميزة في وحدتها الخاصة.',
-    'feature_i18n'        => 'متعدد اللغات',
-    'feature_i18n_desc'   => 'دعم العربية والإنجليزية مع spatie/laravel-translatable مدمج.',
-    'feature_docker'      => 'جاهز لـ Docker',
-    'feature_docker_desc' => 'Nginx + PHP-FPM + MySQL. أمر واحد لتشغيل البيئة الكاملة.',
-    'feature_repo'        => 'نمط Repository',
-    'feature_repo_desc'   => 'طبقة بيانات نظيفة مع واجهات وتطبيقات Eloquent ومزود خدمة.',
-    'feature_laravel'     => 'Laravel 12',
-    'feature_laravel_desc'=> 'مبني على أحدث Laravel مع PHP 8.4 و Vite وأدوات حديثة.',
-
-    'developed_by' => 'تم التطوير بواسطة',
+    'ok' => 'حسناً',
+    'save_changes' => 'حفظ التغييرات',
+    'continue' => 'متابعة',
+    'back' => 'رجوع',
 ];
