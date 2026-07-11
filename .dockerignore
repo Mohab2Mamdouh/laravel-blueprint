@@ -1,0 +1,9 @@
+.git
+.idea
+vendor
+node_modules
+.env
+.env.*
+*.pem
+*.key
+composer.lock
