@@ -50,6 +50,8 @@ interface RepositoryInterface
 
     public function insert(array $payload): bool;
 
+    public function createMany(array $payload): bool;
+
     public function getFirst(): ?Model;
 
     public function update($modelId, array $payload): ?Model;
@@ -57,6 +59,16 @@ interface RepositoryInterface
     public function delete(Model|int $modelId): bool;
 
     public function forceDelete($modelId): bool;
+
+    public function restore($modelId): bool;
+
+    public function getByUuid(string $uuid, array $columns = ['*'], array $relations = []): ?Model;
+
+    public function getByIds(array $ids, array $columns = ['*'], array $relations = []);
+
+    public function touch($modelId, string $column): bool;
+
+    public function firstOrCreate(array $attributes = [], array $values = []);
 
     public function paginate(int $perPage = 10, array $relations = [], $orderBy = 'ASC', $columns = ['*']);
 

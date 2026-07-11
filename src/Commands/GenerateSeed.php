@@ -40,27 +40,29 @@ class GenerateSeed extends Command
             ->map(function ($file) {
                 $filename = pathinfo($file, PATHINFO_FILENAME);
 
-                // Extract timestamp if it exists (format: TIMESTAMP^ClassName or YYYY-MM-DD^ClassName)
-                if (str_contains($filename, '^')) {
-                    [$timestamp, $className] = explode('^', $filename, 2);
+                $timestamp = 0;
+                $className = $filename;
 
-                    // Convert date format (YYYY-MM-DD) to timestamp for sorting
-                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $timestamp)) {
-                        $timestamp = strtotime($timestamp);
+                // Extract the timestamp prefix if present.
+                // Files are created as TIMESTAMP_ClassName (see MakeSeederCommand),
+                // and legacy YYYY-MM-DD_ClassName files are supported too.
+                if (str_contains($filename, '_')) {
+                    [$prefix, $rest] = explode('_', $filename, 2);
+
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $prefix)) {
+                        // Date prefix — convert to a unix timestamp for sorting.
+                        $timestamp = (int) strtotime($prefix);
+                        $className = $rest;
+                    } elseif (is_numeric($prefix)) {
+                        $timestamp = (int) $prefix;
+                        $className = $rest;
                     }
-
-                    return [
-                        'filename'  => $filename,
-                        'timestamp' => is_numeric($timestamp) ? (int) $timestamp : 0,
-                        'class'     => $className,
-                    ];
                 }
 
-                // No timestamp prefix, use 0 for sorting
                 return [
                     'filename'  => $filename,
-                    'timestamp' => 0,
-                    'class'     => $filename,
+                    'timestamp' => $timestamp,
+                    'class'     => $className,
                 ];
             })
             ->sortBy('timestamp')

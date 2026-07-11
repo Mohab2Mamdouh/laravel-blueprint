@@ -38,7 +38,7 @@ readonly class SettingService
         }
 
         if (!app()->environment('local')) {
-            Cache::forget('view.websiteSettings');
+            Cache::forget(config('blueprint.cache.website_settings_key', 'view.websiteSettings'));
         }
 
         return true;

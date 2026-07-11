@@ -120,7 +120,7 @@ class SettingRepository extends Repository implements SettingRepositoryInterface
         $this->updateOrCreate(['key' => 'last_backup'], ['value' => now()->format('Y-m-d')]);
 
         if (!app()->environment('local')) {
-            Cache::forget('view.websiteSettings');
+            Cache::forget(config('blueprint.cache.website_settings_key', 'view.websiteSettings'));
         }
     }
 

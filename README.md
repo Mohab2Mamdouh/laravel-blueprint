@@ -13,9 +13,9 @@ A Laravel blueprint package that provides a complete foundation for rapid applic
 | Configuration | `config/blueprint.php` and the package auto-publish behaviour |
 | Translations | Package translations under `src/lang` (namespaced `blueprint`) and publishing instructions |
 | Migrations | Package migrations (seeders table, settings table) |
-| Components | `QueryReturnType`, `Responser`, `LogHelper`, `PaginationCollection`, `FormattedDateTime` cast |
-| Settings Module | Migration, Model, Repository, Controller, Service, Request for application settings |
-| BaseModel & Traits | `BaseModel` and traits: `Actor`, `Enumable`, `HumanDates`, `TranslatableFallback`, `HasSlug`, `UploadImages` |
+| Components | `QueryReturnType`, `Responser`, `LogHelper`, `CacheHelper`, `MailHelper`, `FcmHelper`, `PaginationCollection`, `FormattedDateTime` cast |
+| Settings Module | Migration, Model, Repository, Service, Request for application settings |
+| BaseModel & Traits | `BaseModel` and traits: `Actor`, `Enumable`, `HumanDates`, `TranslatableFallback`, `HasSlug`, `HasUuid`, `HasStatus`, `HasMeta`, `Filterable`, `BelongsToUser`, `UploadImages` |
 | Repository Base | Repository contract + Eloquent base implementation for data access |
 | Stubs | Scaffolding stubs used by `AddRepositoryPatternCommand` |
 | Database shortcuts & macros | Blueprint and Builder macros registered by the provider (e.g. `userId`, `audit`, `search`) |
@@ -301,9 +301,22 @@ $repository->query(returnType: QueryReturnType::FIRST);
 // Returns a LengthAwarePaginator
 $repository->query(returnType: QueryReturnType::PAGINATE, perPage: 15);
 
+// Returns a CursorPaginator
+$repository->query(returnType: QueryReturnType::CURSOR_PAGINATE, perPage: 15);
+
 // Returns the underlying Builder for further chaining
 $query = $repository->query(returnType: QueryReturnType::QUERY);
 $results = $query->where('status', 'active')->get();
+
+// Returns a plucked key => value list.
+// Pass the value (and optional key) column via $columns; defaults to the primary key.
+$repository->query(columns: ['name', 'id'], returnType: QueryReturnType::PLUCK);
+
+// Returns an int count
+$repository->query(returnType: QueryReturnType::COUNT);
+
+// Returns a bool
+$repository->query(['active'], returnType: QueryReturnType::EXISTS);
 ```
 
 ### Responser Helper
@@ -348,6 +361,74 @@ What it adds
 - Consistent event header formatting (e.g. "=== [PaymentService: charge failed] ===").
 - Automatically includes request metadata: `url`, `method`, `ip`, and `user_id` (nullable when not available).
 - Truncates long exception traces according to `blueprint.logging.max_trace_length` to avoid bloating logs.
+
+### getSettings() helper
+
+A global helper for reading application settings on demand. The result is cached forever (keyed by `blueprint.cache.website_settings_key`) so the `settings` table is only queried on the first call, then served from cache until settings are updated:
+
+```php
+getSettings();            // full ['key' => value, …] map
+getSettings('site_name'); // a single value, or null when the key is absent
+```
+
+It is defensive: before the `settings` table is migrated (or if the DB is unreachable) it returns `[]` / `null` instead of throwing, and never caches that empty state. The cache is invalidated automatically by `SettingService::update()` and by creating a backup.
+
+For backward compatibility the provider still shares a `$websiteSettings` variable with every view (`getSettings()` under the hood), so existing Blade templates keep working. Unlike before, this no longer runs a DB query on every request — it resolves lazily through the cached helper and is safe before the `settings` table exists. New code should prefer calling `getSettings()` directly.
+
+### CacheHelper
+
+Consistent, prefixed caching with model-scoped and tag-based helpers:
+
+```php
+use Mohab\\LaravelBlueprint\\Helpers\\CacheHelper;
+
+CacheHelper::remember('settings.all', fn () => Setting::all());        // forever
+CacheHelper::remember('settings.all', fn () => Setting::all(), 3600);  // TTL in seconds
+CacheHelper::put('key', $value);
+CacheHelper::get('key', $default);
+CacheHelper::forget('key');
+
+// Model-scoped (auto-key: "<prefix>:<table>:<id>")
+CacheHelper::rememberForModel($product, fn () => $product->load('variants'));
+CacheHelper::forgetModel($product);
+
+// Tagged (Redis / Memcached)
+CacheHelper::rememberTagged(['products'], 'featured', fn () => ...);
+CacheHelper::flushTags(['products']);
+```
+
+The key prefix is configurable via `config('blueprint.cache.prefix')` (default `blueprint`).
+
+### MailHelper
+
+Checks SMTP reachability before attempting to send mail:
+
+```php
+use Mohab\\LaravelBlueprint\\Helpers\\MailHelper;
+
+// In a controller action that sends mail:
+if ($guard = MailHelper::guard()) {
+    return $guard; // 503 JSON response when the mail server is unreachable
+}
+
+MailHelper::canConnect(); // bool — never throws, logs warnings
+```
+
+### FcmHelper
+
+Firebase Cloud Messaging push notifications.
+
+> Requires the optional `kreait/firebase-php` package (`composer require kreait/firebase-php`) and a service-account credentials file. Set its path via `FIREBASE_CREDENTIALS` (relative to `storage/`) or `config('blueprint.firebase.credentials')`.
+
+```php
+use Mohab\\LaravelBlueprint\\Helpers\\FcmHelper;
+
+if ($guard = FcmHelper::guard()) {
+    return $guard; // 503 when credentials are missing
+}
+
+FcmHelper::send($tokens, 'Title', 'Body', ['order_id' => 42], $imageUrl);
+```
 
 ### SetLocale Middleware
 
@@ -408,9 +489,20 @@ The package ships a full settings module:
 - **Migration** — creates the `settings` table with `key`, `value` (JSON), `validation` (JSON), timestamps, and soft deletes.
 - **Model** — `Mohab\\LaravelBlueprint\\Models\\Setting`
 - **Repository Interface** — `SettingRepositoryInterface` (bound to `SettingRepository` via the service provider)
-- **Controller** — `SettingController` with `edit`, `update`, and `createBackup` actions
-- **Service** — `SettingService` for business logic
+- **Service** — `Mohab\\LaravelBlueprint\\Http\\Services\\SettingService` with `settings()`, `update(SettingRequest)`, and `createBackup()`
 - **Request** — `SettingRequest` (validation rules pulled dynamically from the `settings` table)
+
+> The package does not ship a controller or routes for settings — wire your own controller (and routes) in the consuming app and delegate to `SettingService`. Example:
+>
+> ```php
+> public function update(SettingRequest $request, SettingService $service)
+> {
+>     $service->update($request);
+>     return back();
+> }
+> ```
+
+Read settings anywhere via the global `getSettings()` helper (see below) — it resolves lazily and is cached, so the database is only queried the first time settings are needed (no query on every boot/request).
 
 ### BaseModel
 
@@ -425,6 +517,10 @@ class Product extends BaseModel
     public array $translatable = ['name', 'description'];
 }
 ```
+
+`BaseModel` also registers the `UserVisibilityScope` global scope. It ships as a no-op placeholder — edit `Mohab\\LaravelBlueprint\\Models\\Scopes\\UserVisibilityScope` (or replace it in your app) to add project-wide, user-aware visibility filtering.
+
+Note: because `BaseModel` uses `HumanDates`, its `created_at` / `updated_at` are returned as formatted strings — see the ⚠️ note under [HumanDates](#humandates).
 
 ### Repository Base
 
@@ -496,6 +592,8 @@ class Post extends Model
 $post->created_at; // "27 Mar, 2026, 03:45 PM"
 ```
 
+> ⚠️ This **replaces** the `created_at` / `updated_at` / `email_verified_at` accessors, so they return localized **strings** instead of `Carbon` instances. Anything relying on Carbon on these attributes (`$post->created_at->diffForHumans()`, date math, ISO serialization for API clients) will not work on models using this trait — including everything extending `BaseModel`. If you need raw timestamps, read them via `$post->getRawOriginal('created_at')` or apply the `FormattedDateTime` cast to a separate attribute instead.
+
 #### TranslatableFallback
 
 Extends `spatie/laravel-translatable` with automatic fallback to the first available language when the requested locale is missing:
@@ -508,6 +606,158 @@ class Category extends Model
     use TranslatableFallback;
 
     public array $translatable = ['name'];
+}
+```
+
+#### HasSlug
+
+Auto-generates a unique slug from a source attribute on create, and regenerates it on update when the source changes:
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\HasSlug;
+
+class Post extends Model
+{
+    use HasSlug;
+
+    protected string $slugFrom = 'title'; // source attribute (default: 'name')
+    protected string $slugTo   = 'slug';  // destination column (default: 'slug')
+}
+```
+
+Uniqueness is enforced (appending a short random suffix on collision) and respects soft deletes. Works transparently with translatable attributes. Call `$post->regenerateSlug()` to force a rebuild.
+
+#### HasUuid
+
+Assigns a UUID on create and adds lookup helpers:
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\HasUuid;
+
+class Order extends Model
+{
+    use HasUuid;
+
+    // Override the column if it isn't 'uuid':
+    protected string $uuidColumn = 'public_id';
+}
+
+Order::findByUuid($uuid);        // ?Order
+Order::findByUuidOrFail($uuid);  // Order (throws if missing)
+Order::query()->whereUuid($uuid)->first();
+```
+
+#### HasStatus
+
+String-status state machine with checks, transitions, and scopes:
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\HasStatus;
+
+class Product extends Model
+{
+    use HasStatus;
+    // Override defaults if needed:
+    protected string $statusColumn = 'status';   // default 'status'
+    protected string $activeValue   = 'active';   // default 'active'
+    protected string $inactiveValue = 'inactive'; // default 'inactive'
+}
+
+$product->isActive();
+$product->activate();      // persists immediately
+$product->deactivate();
+$product->toggleStatus();
+$product->setStatus('draft');
+
+Product::active()->get();
+Product::inactive()->get();
+Product::withStatus('draft')->get();
+```
+
+#### HasMeta
+
+Read/write helpers over a JSON `meta` column (pair with the `meta()` migration macro):
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\HasMeta;
+
+class Product extends Model
+{
+    use HasMeta;
+    protected $casts = ['meta' => 'array'];
+}
+
+$product->setMeta('color', 'red');   // persists immediately
+$product->getMeta('color', 'black'); // with default
+$product->hasMeta('color');
+$product->mergeMeta(['size' => 'L', 'weight' => 2]);
+$product->forgetMeta('color');
+$product->getAllMeta();
+```
+
+#### Filterable
+
+Declarative request-driven filtering, searching, range filtering, and safe sorting:
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\Filterable;
+
+class Product extends Model
+{
+    use Filterable;
+
+    protected array $filterable   = ['status', 'category_id']; // exact match (supports comma-separated → whereIn)
+    protected array $searchable   = ['name', 'description'];   // used by the reserved `q` key (LIKE)
+    protected array $rangeFilters = ['price_from' => 'price', 'price_to' => 'price'];
+    protected array $sortable     = ['created_at', 'price'];   // whitelist for `sort_by` (prevents SQL injection)
+}
+
+Product::filter($request->only([
+    'status', 'category_id', 'q', 'price_from', 'price_to', 'sort_by', 'sort_dir',
+]))->paginate();
+```
+
+#### BelongsToUser
+
+Ownership trait for user-scoped models.
+
+> ⚠️ **Opinionated / aggressive defaults.** This trait installs a global scope that filters **every** query to `user_id = auth()->id()` whenever a user is authenticated, auto-sets `user_id` on create, and **`abort(403)` on delete** if the record isn't owned by the current user. This is deliberate for tenant/owner-scoped resources, but it will silently affect admin and console queries where a user is authenticated. Use it only on models that are always scoped to the acting user; otherwise prefer `Actor`.
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\BelongsToUser;
+
+class Note extends Model
+{
+    use BelongsToUser;
+}
+
+$note->user; // BelongsTo → configured user model
+Note::all(); // already scoped to the authenticated user
+```
+
+The related user model is resolved from `config('auth.providers.users.model')` (falling back to `App\\Models\\User`).
+
+#### UploadImages
+
+File-upload helpers for storing, replacing, and pruning uploaded files:
+
+```php
+use Mohab\\LaravelBlueprint\\Traits\\UploadImages;
+
+class ProductService
+{
+    use UploadImages;
+
+    public function store(Request $request)
+    {
+        $path  = $this->uploadImage($request, 'image', 'products');       // ?string
+        $paths = $this->uploadMultipleImages($request->file('gallery', []), 'products/gallery');
+        // $this->updateImage($model, $request, 'image', 'products', 'image');
+        // $this->deleteOldImages($imageModel, $productId, 'product_id', keepIds: [1, 2]);
+    }
+
+    // Override the default disk ('public') if needed:
+    protected function uploadDisk(): string { return 's3'; }
 }
 ```
 
@@ -536,10 +786,8 @@ The stubs used by `AddRepositoryPatternCommand` are located at `src/Commands/stu
 
 | Stub | Description |
 |------|-------------|
-| `interface.stub` | Basic repository interface |
-| `interface-crud.stub` | CRUD repository interface |
-| `repository.stub` | Basic repository class |
-| `repository-crud.stub` | CRUD repository with implementations |
+| `interface.stub` | Repository interface (extends the CRUD-complete base contract) |
+| `repository.stub` | Repository class (extends the CRUD-complete base repository) |
 | `service.stub` | Basic service class |
 | `service-crud.stub` | CRUD service with all methods |
 | `controller.stub` | Basic controller |
@@ -561,19 +809,27 @@ All stubs support three placeholder variables:
 
 The service provider registers several helpful Blueprint and Builder macros that you can use in your migrations and query builders:
 
-- `Blueprint::userId()` — shorthand for a constrained `user_id` foreign id with cascade on delete/update
+- `Blueprint::userId($column = 'user_id')` — constrained `user_id` foreign id with cascade on delete/update
 - `Blueprint::status($default = 'active')` — string status column with default and index
 - `Blueprint::softDeletesWithUser()` — soft deletes plus `deleted_by` foreign id
-- `Blueprint::audit()` — sets `created_by` and `updated_by` foreign ids (nullable)
+- `Blueprint::audit()` — nullable `created_by` and `updated_by` foreign ids
 - `Blueprint::slug()` — unique indexed `slug` column
 - `Blueprint::meta()` — nullable JSON `meta` column
+- `Blueprint::uuid($column = 'uuid')` — unique indexed 36-char UUID column
+- `Blueprint::phone($column = 'phone')` — nullable 20-char phone column
+- `Blueprint::price($column = 'price', $total = 10, $places = 2)` — decimal price column defaulting to 0
+- `Blueprint::ordering($column = 'sort_order')` — unsigned integer for drag-and-drop ordering (indexed, default 0)
+- `Blueprint::publishedAt()` — nullable indexed `published_at` timestamp
 
 Builder macros:
-- `Builder::active($column = 'status')` — scope to only active rows
-- `Builder::inactive($column = 'status')` — scope to only inactive rows
+- `Builder::active($column = 'status')` — scope to rows where the column equals `'active'`
+- `Builder::inactive($column = 'status')` — scope to rows where the column equals `'inactive'`
 - `Builder::search($term, $columns)` — multi-column LIKE search helper
+- `Builder::ordered($column = 'sort_order')` — order by the ordering column
+- `Builder::published()` — `published_at` is set and in the past
+- `Builder::scheduled()` — `published_at` is set and in the future
 
-These are registered in the provider method `bootShortCuts()`.
+These are registered in the provider method `bootShortcuts()`.
 
 ---
 

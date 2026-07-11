@@ -11,14 +11,18 @@ enum QueryReturnType: string
     case GET = 'get';
     case FIRST = 'first';
     case PAGINATE = 'paginate';
+    case CURSOR_PAGINATE = 'cursor_paginate';
     case QUERY = 'query';
+    case PLUCK = 'pluck';
+    case COUNT = 'count';
+    case EXISTS = 'exists';
 
     /**
      * Check if the return type requires pagination.
      */
     public function requiresPagination(): bool
     {
-        return $this === self::PAGINATE;
+        return in_array($this, [self::PAGINATE, self::CURSOR_PAGINATE], true);
     }
 
     /**

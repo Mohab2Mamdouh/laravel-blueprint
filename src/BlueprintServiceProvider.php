@@ -2,7 +2,6 @@
 
 namespace Mohab\LaravelBlueprint;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Filesystem\Filesystem;
@@ -98,33 +97,22 @@ class BlueprintServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Share application settings with every view for backward compatibility with
+     * projects that reference `$websiteSettings` in Blade.
+     *
+     * This delegates to the global getSettings() helper, so it is resolved lazily
+     * and cached — it will not query (or crash) before the settings table exists,
+     * and only hits the database once per cache lifetime.
+     *
+     * New code should prefer calling getSettings() directly instead of relying on
+     * this shared variable.
+     */
     private function bootViews(): void
     {
-        $cacheConfig = config('blueprint.cache', []);
-
-        $useCache = $cacheConfig['enabled'] ?? null;
-        if (is_null($useCache)) {
-            $useCache = !app()->environment('local');
-        }
-
-        $key = $cacheConfig['website_settings_key'] ?? 'view.websiteSettings';
-        $rememberForever = $cacheConfig['remember_forever'] ?? true;
-        $ttl = $cacheConfig['ttl'] ?? 3600;
-
-        try {
-            if ($useCache) {
-                $websiteSettings = $rememberForever
-                    ? Cache::rememberForever($key, fn () => resolve(SettingRepositoryInterface::class)->settings())
-                    : Cache::remember($key, $ttl, fn () => resolve(SettingRepositoryInterface::class)->settings());
-            } else {
-                $websiteSettings = resolve(SettingRepositoryInterface::class)->settings();
-            }
-        } catch (\Throwable $e) {
-            $websiteSettings = resolve(SettingRepositoryInterface::class)->settings();
-        }
-
-        View::share('websiteSettings', $websiteSettings);
+        View::share('websiteSettings', getSettings());
     }
+
     private function registerRepository(): void
     {
         $this->app->bind(

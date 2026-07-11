@@ -81,10 +81,20 @@ abstract class Repository implements RepositoryInterface
         $query = $query->orderBy($orderBy, $order);
 
         return match ($returnType) {
-            QueryReturnType::GET      => $query->get(),
-            QueryReturnType::FIRST    => $query->first(),
-            QueryReturnType::PAGINATE => $query->paginate(request('per_page', $perPage)),
-            QueryReturnType::QUERY    => $query,
+            QueryReturnType::GET             => $query->get(),
+            QueryReturnType::FIRST           => $query->first(),
+            QueryReturnType::PAGINATE        => $query->paginate(request('per_page', $perPage)),
+            QueryReturnType::CURSOR_PAGINATE => $query->cursorPaginate(request('per_page', $perPage)),
+            QueryReturnType::QUERY           => $query,
+            // For PLUCK, pass the value (and optional key) column(s) via $columns,
+            // e.g. query(columns: ['name', 'id'], returnType: PLUCK). Defaults to the
+            // model's primary key when $columns is left as ['*'].
+            QueryReturnType::PLUCK           => $query->pluck(
+                $columns[0] === '*' ? $this->model->getKeyName() : $columns[0],
+                $columns[1] ?? null,
+            ),
+            QueryReturnType::COUNT           => $query->count(),
+            QueryReturnType::EXISTS          => $query->exists(),
         };
     }
 

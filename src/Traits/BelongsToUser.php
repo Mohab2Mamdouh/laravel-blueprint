@@ -2,7 +2,6 @@
 
 namespace Mohab\LaravelBlueprint\Traits;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,11 +30,14 @@ trait BelongsToUser {
     }
 
     /**
-     * Get the user that owns the server.
+     * Get the user that owns the model.
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            config('auth.providers.users.model', \App\Models\User::class),
+            'user_id',
+        );
     }
 
     #[Scope]

@@ -12,7 +12,7 @@ class AddRepositoryPatternCommand extends Command
                             {module : The module name}
                             {--ver=1 : Version number for the repository pattern}
                             {--name= : Optional custom name for the repository pattern}
-                            {--crud : Use CRUD stubs (interface-crud, repository-crud, service-crud, controller-crud)}
+                            {--crud : Use CRUD stubs for the Service and Controller (service-crud, controller-crud). The Interface and Repository always extend the CRUD-complete base.}
                             {--model : Generate a model using the pattern name (or module name if --name is not set)}';
 
     protected $description = 'Add versioned repository pattern (Service, Repository, Interface) to an existing module';

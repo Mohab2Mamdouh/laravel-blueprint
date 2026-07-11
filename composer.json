@@ -19,6 +19,9 @@
         "illuminate/http": "^11.0|^12.0",
         "spatie/laravel-translatable": "^6.0"
     },
+    "suggest": {
+        "kreait/firebase-php": "Required to use FcmHelper for sending Firebase Cloud Messaging push notifications (^7.0)."
+    },
     "autoload": {
         "psr-4": {
             "Mohab\\LaravelBlueprint\\": "src/"
