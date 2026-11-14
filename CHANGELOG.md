@@ -4,9 +4,16 @@ All notable changes to `blueprint-php/laravel` are documented here. The format f
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [1.0.0] - 2026-11-14
+## [3.0.0] - 2026-11-14
+
+### Changed
+- Requires PHP 8.5.12 or newer.
+- Supports Laravel 13 as well as Laravel 12 (Testbench 11 / PHPUnit 12 for the test suite).
+
+## [2.0.0] - 2026-11-14
 
 First public release as `blueprint-php/laravel` (previously the private `mohab/laravel-blueprint`).
+The 1.x tags are the legacy `Mohab\LaravelBlueprint` code — don't install them.
 
 ### Added
 - Platform split: `PlatformService`, `PlatformRequest`, `PlatformResource`, `HasPlatform`,

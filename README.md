@@ -17,8 +17,8 @@ scaffold a whole slice in one command.
 
 ## Requirements
 
-- PHP 8.3+
-- Laravel 12
+- PHP 8.5.12+
+- Laravel 12 or 13
 - [`spatie/laravel-translatable`](https://github.com/spatie/laravel-translatable) 6 (installed automatically)
 - Optional: [`stancl/tenancy`](https://tenancyforlaravel.com) 3, to run tracked seeders per tenant database
 

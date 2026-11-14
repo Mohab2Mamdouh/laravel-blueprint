@@ -26,13 +26,13 @@
         "source": "https://github.com/Mohab2Mamdouh/laravel-blueprint"
     },
     "require": {
-        "php": "^8.3",
-        "laravel/framework": "^12.0",
+        "php": "^8.5.12",
+        "laravel/framework": "^12.0|^13.0",
         "spatie/laravel-translatable": "^6.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^10.0",
-        "phpunit/phpunit": "^11.5"
+        "orchestra/testbench": "^10.0|^11.0",
+        "phpunit/phpunit": "^11.5|^12.0"
     },
     "suggest": {
         "stancl/tenancy": "Lets the tracked seed commands (seed, seed:rollback, seed:reset, seed:status) run per tenant database with --tenant."
