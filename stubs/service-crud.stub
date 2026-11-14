@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ RootNamespace }}\Http\Services\V{{ Version }};
+
+use {{ RootNamespace }}\Repository\Contracts\V{{ Version }}\{{ PatternName }}RepositoryInterface;
+
+class {{ PatternName }}Service
+{
+    public function __construct(
+        private readonly {{ PatternName }}RepositoryInterface $repository
+    ) {}
+
+    public function getAll()
+    {
+        return $this->repository->query();
+    }
+
+    public function getById($id)
+    {
+        return $this->repository->getById($id);
+    }
+
+    public function create(array $data)
+    {
+        return $this->repository->create($data);
+    }
+
+    public function update($id, array $data)
+    {
+        return $this->repository->update($id, $data);
+    }
+
+    public function delete($id)
+    {
+        return $this->repository->delete($id);
+    }
+}

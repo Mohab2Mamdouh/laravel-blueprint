@@ -1,0 +1,19 @@
+<?php
+
+namespace {{ RootNamespace }}\Repository\Eloquent\V{{ Version }};
+
+use Illuminate\Database\Eloquent\Model;
+use {{ RootNamespace }}\Models\{{ PatternName }};
+use {{ RootNamespace }}\Repository\Contracts\V{{ Version }}\{{ PatternName }}RepositoryInterface;
+use BlueprintPhp\Laravel\Repository\Eloquent\Repository;
+
+class {{ PatternName }}Repository extends Repository implements {{ PatternName }}RepositoryInterface
+{
+   protected Model $model;
+
+   public function __construct({{ PatternName }} $model)
+   {
+       parent::__construct($model);
+   }
+
+}

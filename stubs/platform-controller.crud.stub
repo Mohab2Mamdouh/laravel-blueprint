@@ -1,0 +1,50 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Controllers\Controller;
+use {{ abstract_service_namespace }}\{{ abstract_service_class }};
+use Illuminate\Http\Request;
+{{ extra_imports }}
+
+class {{ class }} extends Controller
+{
+    public function __construct(
+        private readonly {{ abstract_service_class }} ${{ abstract_service_var }},
+    ) {}
+
+    public function index(Request $request)
+    {
+        return $this->{{ abstract_service_var }}->index($request);
+    }
+
+    public function getAll()
+    {
+        return $this->{{ abstract_service_var }}->getAll();
+    }
+
+    public function show($id)
+    {
+        return $this->{{ abstract_service_var }}->show($id);
+    }
+
+    public function store({{ request_abstract_class }} $request)
+    {
+        return $this->{{ abstract_service_var }}->store($request);
+    }
+
+    public function update({{ request_abstract_class }} $request, $id)
+    {
+        return $this->{{ abstract_service_var }}->update($request, $id);
+    }
+
+    public function destroy($id)
+    {
+        return $this->{{ abstract_service_var }}->destroy($id);
+    }
+
+    public function restore($id)
+    {
+        return $this->{{ abstract_service_var }}->restore($id);
+    }
+}

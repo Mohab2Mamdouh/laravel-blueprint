@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Seeder;
+
+return new class extends Seeder
+{
+    /**
+     * Apply the seed (run forward). Called by `php artisan seed`.
+     */
+    public function up(): void
+    {
+        //
+    }
+
+    /**
+     * Reverse the seed. Called by `php artisan seed:rollback`.
+     *
+     * WARNING: rollback undoes *data*, which is not always safe to reverse.
+     * Only delete rows this seeder clearly owns (stable keys you inserted).
+     * If a seeder is genuinely irreversible, DELETE this whole down() method
+     * (rather than leaving it empty): seed:rollback then skips it with a warning
+     * and keeps it tracked, so its data stays and it is not re-run.
+     */
+    public function down(): void
+    {
+        //
+    }
+};

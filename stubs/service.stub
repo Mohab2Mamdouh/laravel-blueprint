@@ -1,0 +1,12 @@
+<?php
+
+namespace {{ RootNamespace }}\Http\Services\V{{ Version }};
+
+use {{ RootNamespace }}\Repository\Contracts\V{{ Version }}\{{ PatternName }}RepositoryInterface;
+
+class {{ PatternName }}Service
+{
+    public function __construct(
+        private readonly {{ PatternName }}RepositoryInterface $repository
+    ) {}
+}

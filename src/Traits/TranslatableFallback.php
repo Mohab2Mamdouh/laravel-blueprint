@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Spatie\Translatable\HasTranslations;
 

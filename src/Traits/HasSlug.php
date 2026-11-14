@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Illuminate\Support\Str;
 
@@ -98,8 +98,8 @@ trait HasSlug
 
     private function makeSlugUnique(string $base): string
     {
-        $slug      = $base;
-        $column    = $this->slugColumn();
+        $slug = $base;
+        $column = $this->slugColumn();
         $hasSoftDeletes = in_array(
             'Illuminate\Database\Eloquent\SoftDeletes',
             class_uses_recursive($this),    // ← recursive: catches traits on parent classes too
@@ -108,7 +108,7 @@ trait HasSlug
 
         while ($this->slugExists($slug, $column, $hasSoftDeletes)) {
             // Append a short random suffix and re-slugify to keep the result clean.
-            $slug = Str::slug($base . '-' . Str::random(4));
+            $slug = Str::slug($base.'-'.Str::random(4));
         }
 
         return $slug;

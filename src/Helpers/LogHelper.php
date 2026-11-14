@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Helpers;
+namespace BlueprintPhp\Laravel\Helpers;
 
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -18,7 +18,7 @@ class LogHelper
 
     public static function warning(string $event, array $context = []): void
     {
-        Log::warning(static::formatMessage($event), static::buildContext($context   ));
+        Log::warning(static::formatMessage($event), static::buildContext($context));
     }
 
     public static function error(string $event, array $context = []): void
@@ -82,9 +82,9 @@ class LogHelper
         $request = request();
 
         return [
-            'url'     => $request?->fullUrl(),
-            'method'  => $request?->method(),
-            'ip'      => $request?->ip(),
+            'url' => $request?->fullUrl(),
+            'method' => $request?->method(),
+            'ip' => $request?->ip(),
             'user_id' => optional(auth()->user())->id,
         ];
     }
@@ -96,11 +96,11 @@ class LogHelper
     {
         return [
             'exception' => get_class($e),
-            'message'   => $e->getMessage(),
-            'code'      => $e->getCode(),
-            'file'      => $e->getFile(),
-            'line'      => $e->getLine(),
-            'trace'     => static::truncateTrace($e->getTraceAsString()),
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => static::truncateTrace($e->getTraceAsString()),
         ];
     }
 
@@ -113,7 +113,7 @@ class LogHelper
         $limit = (int) config('blueprint.logging.max_trace_length', 5000);
 
         return strlen($trace) > $limit
-            ? substr($trace, 0, $limit) . ' …[truncated]'
+            ? substr($trace, 0, $limit).' …[truncated]'
             : $trace;
     }
 }

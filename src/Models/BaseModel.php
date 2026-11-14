@@ -1,20 +1,30 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Models;
+namespace BlueprintPhp\Laravel\Models;
 
+use BlueprintPhp\Laravel\Models\Scopes\UserVisibilityScope;
+use BlueprintPhp\Laravel\Traits\Actor;
+use BlueprintPhp\Laravel\Traits\HumanDates;
+use BlueprintPhp\Laravel\Traits\TranslatableFallback;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Mohab\LaravelBlueprint\Models\Scopes\UserVisibilityScope;
-use Mohab\LaravelBlueprint\Traits\Actor;
-use Mohab\LaravelBlueprint\Traits\HumanDates;
-use Mohab\LaravelBlueprint\Traits\TranslatableFallback;
 
 class BaseModel extends Model
 {
-    use SoftDeletes, HumanDates, TranslatableFallback, Actor;
+    use Actor, HumanDates, SoftDeletes, TranslatableFallback;
 
     protected static function booted(): void
     {
         static::addGlobalScope(new UserVisibilityScope);
+    }
+
+    /**
+     * Columns the `byKeywords()` query macro searches. Override per model.
+     *
+     * @return array<int, string>
+     */
+    public function getSearchableColumns(): array
+    {
+        return [];
     }
 }

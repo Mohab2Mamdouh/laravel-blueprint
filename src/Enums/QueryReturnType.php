@@ -1,8 +1,8 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Enums;
+namespace BlueprintPhp\Laravel\Enums;
 
-use Mohab\LaravelBlueprint\Traits\Enumable;
+use BlueprintPhp\Laravel\Traits\Enumable;
 
 enum QueryReturnType: string
 {
@@ -10,6 +10,7 @@ enum QueryReturnType: string
 
     case GET = 'get';
     case FIRST = 'first';
+    case FIRST_OR_FAIL = 'firstOrFail';
     case PAGINATE = 'paginate';
     case CURSOR_PAGINATE = 'cursor_paginate';
     case QUERY = 'query';
@@ -30,7 +31,7 @@ enum QueryReturnType: string
      */
     public function returnsSingle(): bool
     {
-        return $this === self::FIRST;
+        return in_array($this, [self::FIRST, self::FIRST_OR_FAIL], true);
     }
 
     /**

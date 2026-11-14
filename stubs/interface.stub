@@ -1,0 +1,10 @@
+<?php
+
+namespace {{ RootNamespace }}\Repository\Contracts\V{{ Version }};
+
+use BlueprintPhp\Laravel\Repository\Contracts\RepositoryInterface;
+
+interface {{ PatternName }}RepositoryInterface extends RepositoryInterface
+{
+    // Define any additional methods specific to {{ PatternName }}RepositoryInterface here
+}

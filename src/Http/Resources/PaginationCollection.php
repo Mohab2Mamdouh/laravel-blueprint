@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Http\Resources;
+namespace BlueprintPhp\Laravel\Http\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -11,8 +11,8 @@ class PaginationCollection extends ResourceCollection
     /**
      * Create a new resource collection instance.
      *
-     * @param  mixed        $resource      The paginated resource
-     * @param  string|null  $resourceClass Optional resource class to transform items
+     * @param  mixed  $resource  The paginated resource
+     * @param  string|null  $resourceClass  Optional resource class to transform items
      */
     public function __construct($resource, ?string $resourceClass = null)
     {
@@ -27,16 +27,16 @@ class PaginationCollection extends ResourceCollection
     public function toArray($request): array
     {
         return [
-            'items'      => $this->resourceClass
+            'items' => $this->resourceClass
                 ? $this->resourceClass::collection($this->collection)
                 : $this->collection,
             'pagination' => [
                 'current_page' => $this->currentPage(),
-                'last_page'    => $this->lastPage(),
-                'per_page'     => $this->perPage(),
-                'total'        => $this->total(),
-                'from'         => $this->resource->firstItem(),
-                'to'           => $this->resource->lastItem(),
+                'last_page' => $this->lastPage(),
+                'per_page' => $this->perPage(),
+                'total' => $this->total(),
+                'from' => $this->resource->firstItem(),
+                'to' => $this->resource->lastItem(),
             ],
         ];
     }

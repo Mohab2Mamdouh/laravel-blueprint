@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ model_fqn }};
+use Illuminate\Database\Eloquent\Model;
+use BlueprintPhp\Laravel\Repository\Eloquent\Repository;
+use {{ interface_namespace }}\{{ interface_class }};
+
+class {{ class }} extends Repository implements {{ interface_class }}
+{
+    protected Model $model;
+
+    public function __construct({{ model_class }} $model)
+    {
+        parent::__construct($model);
+    }
+}

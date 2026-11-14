@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Helpers;
+namespace BlueprintPhp\Laravel\Helpers;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -151,6 +151,7 @@ class CacheHelper
     public static function prefixedKey(string $key): string
     {
         $prefix = rtrim(config('blueprint.cache.prefix', 'blueprint'), ':');
+
         return "{$prefix}:{$key}";
     }
 
@@ -161,7 +162,7 @@ class CacheHelper
      */
     public static function modelKey(Model $model): string
     {
-        return $model->getTable() . ':' . $model->getKey();
+        return $model->getTable().':'.$model->getKey();
     }
 
     /**

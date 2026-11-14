@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use BlueprintPhp\Laravel\Models\BaseModel;
+
+class {{ class }} extends BaseModel
+{
+    protected $guarded = [];
+
+    public function getSearchableColumns(): array
+    {
+        return ['name'];
+    }
+}

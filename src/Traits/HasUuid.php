@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

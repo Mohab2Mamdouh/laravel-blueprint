@@ -1,8 +1,9 @@
 <?php
 
+use BlueprintPhp\Laravel\Contracts\ProvidesSettings;
+use BlueprintPhp\Laravel\Exceptions\DebugException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
-use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,7 +17,7 @@ use Mohab\LaravelBlueprint\Repository\Contracts\SettingRepositoryInterface;
 | app (e.g. app/helpers.php) so it can resolve your real Platform service.
 */
 
-if (!function_exists('getSettings')) {
+if (! function_exists('getSettings')) {
     /**
      * Retrieve application settings on demand (cached forever).
      *
@@ -26,8 +27,11 @@ if (!function_exists('getSettings')) {
      *   getSettings();            // full ['key' => value, …] map
      *   getSettings('site_name'); // a single value (null when the key is absent)
      *
-     * The cache is keyed by `blueprint.cache.website_settings_key` and is
-     * invalidated automatically whenever settings are updated (see SettingService).
+     * The values come from the class named in `blueprint.settings.repository`
+     * (see {@see ProvidesSettings}); without one
+     * this returns an empty array. The cache is keyed by
+     * `blueprint.cache.website_settings_key` — forget that key whenever your
+     * settings change.
      *
      * @return mixed The full settings array, or the single value for $key.
      */
@@ -37,18 +41,38 @@ if (!function_exists('getSettings')) {
 
         try {
             $settings = Cache::rememberForever($cacheKey, function () {
-                // Skip caching when the table isn't migrated yet: throwing here
-                // prevents an empty array from being cached forever.
-                if (!Schema::hasTable('settings')) {
-                    throw new \RuntimeException('settings table not available yet');
+                // No settings source configured: nothing to cache.
+                $source = config('blueprint.settings.repository');
+
+                if (! $source) {
+                    throw new RuntimeException('no settings repository configured');
                 }
 
-                return resolve(SettingRepositoryInterface::class)->settings();
+                // Skip caching when the table isn't migrated yet: throwing here
+                // prevents an empty array from being cached forever.
+                if (! Schema::hasTable(config('blueprint.settings.table', 'settings'))) {
+                    throw new RuntimeException('settings table not available yet');
+                }
+
+                return resolve($source)->settings();
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $settings = [];
         }
 
         return $key !== null ? ($settings[$key] ?? null) : $settings;
+    }
+}
+
+if (! function_exists('dbg')) {
+    /**
+     * Debug helper: throw a DebugException that dumps the given value(s) plus the
+     * caller trace and request context as a JSON response (via the API renderer).
+     *
+     *   dbg($user);  dbg('checkpoint', $payload);
+     */
+    function dbg(mixed ...$args): never
+    {
+        throw new DebugException(...$args);
     }
 }

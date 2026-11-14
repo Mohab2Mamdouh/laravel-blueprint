@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use BlueprintPhp\Laravel\Enums\Platform;
+use BlueprintPhp\Laravel\Enums\Version;
+use {{ abstract_namespace }}\{{ abstract_class }};
+
+class {{ class }} extends {{ abstract_class }}
+{
+    public static function platform(): Platform
+    {
+        return Platform::{{ platform_enum_case }};
+    }
+
+    public static function version(): Version
+    {
+        return Version::{{ version_enum_case }};
+    }
+}

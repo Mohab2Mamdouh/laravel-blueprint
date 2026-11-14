@@ -1,41 +1,67 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "mohab/laravel-blueprint",
-    "description": "A Laravel starter package providing repository pattern commands, seeders, settings, base models, traits, and more.",
-    "keywords": ["laravel", "starter", "repository-pattern", "scaffolding", "blueprint"],
+    "name": "blueprint-php/laravel",
+    "description": "A layered foundation for Laravel apps: repositories, platform-split services/requests/resources, a JSON response envelope, tracked seeders, migration and query macros, model traits and code generators.",
+    "keywords": [
+        "laravel",
+        "repository-pattern",
+        "scaffolding",
+        "generators",
+        "service-layer",
+        "seeders",
+        "api"
+    ],
+    "homepage": "https://github.com/Mohab2Mamdouh/laravel-blueprint",
     "license": "MIT",
     "type": "library",
     "authors": [
         {
             "name": "Mohab Mamdouh",
+            "homepage": "https://github.com/Mohab2Mamdouh",
             "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/Mohab2Mamdouh/laravel-blueprint/issues",
+        "source": "https://github.com/Mohab2Mamdouh/laravel-blueprint"
+    },
     "require": {
         "php": "^8.3",
-        "illuminate/support": "^11.0|^12.0",
-        "illuminate/console": "^11.0|^12.0",
-        "illuminate/database": "^11.0|^12.0",
-        "illuminate/http": "^11.0|^12.0",
+        "laravel/framework": "^12.0",
         "spatie/laravel-translatable": "^6.0"
     },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.5"
+    },
     "suggest": {
-        "kreait/firebase-php": "Required to use FcmHelper for sending Firebase Cloud Messaging push notifications (^7.0)."
+        "stancl/tenancy": "Lets the tracked seed commands (seed, seed:rollback, seed:reset, seed:status) run per tenant database with --tenant."
     },
     "autoload": {
         "psr-4": {
-            "Mohab\\LaravelBlueprint\\": "src/"
+            "BlueprintPhp\\Laravel\\": "src/"
         },
         "files": [
             "src/Helpers/helpers.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "BlueprintPhp\\Laravel\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
     "extra": {
         "laravel": {
             "providers": [
-                "Mohab\\LaravelBlueprint\\BlueprintServiceProvider"
+                "BlueprintPhp\\Laravel\\BlueprintServiceProvider"
             ]
         }
+    },
+    "config": {
+        "sort-packages": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true

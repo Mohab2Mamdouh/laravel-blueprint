@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Models\Scopes;
+namespace BlueprintPhp\Laravel\Models\Scopes;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +17,7 @@ class UserVisibilityScope implements Scope
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return; // skip for unauthenticated requests
         }
 

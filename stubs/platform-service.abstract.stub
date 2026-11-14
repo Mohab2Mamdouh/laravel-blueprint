@@ -1,0 +1,10 @@
+<?php
+
+namespace {{ namespace }};
+
+use BlueprintPhp\Laravel\Service\PlatformService;
+
+abstract class {{ class }} extends PlatformService
+{
+    // TODO: add constructor and methods
+}

@@ -1,0 +1,13 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Controllers\Controller;
+use {{ abstract_service_namespace }}\{{ abstract_service_class }};
+
+class {{ class }} extends Controller
+{
+    public function __construct(
+        private readonly {{ abstract_service_class }} ${{ abstract_service_var }},
+    ) {}
+}

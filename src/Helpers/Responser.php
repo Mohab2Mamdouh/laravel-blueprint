@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Helpers;
+namespace BlueprintPhp\Laravel\Helpers;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -16,9 +16,9 @@ class Responser
     public static function success(int $status = Response::HTTP_OK, string $message = 'Success', mixed $data = [])
     {
         return response()->json([
-            'status'  => $status,
+            'status' => $status,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $status);
     }
 
@@ -35,24 +35,24 @@ class Responser
             $trace = $throwable->getTraceAsString();
             $trace = Str::limit($trace, 10000, ' …[truncated]');
 
-            Log::error("=============== [ERROR CATCH] ===============\n" . ($message ?: 'Service error') . ': ' . print_r([
+            Log::error("=============== [ERROR CATCH] ===============\n".($message ?: 'Service error').': '.print_r([
                 'exception' => get_class($throwable),
-                'code'      => $throwable->getCode(),
-                'message'   => $throwable->getMessage(),
-                'file'      => $throwable->getFile(),
-                'line'      => $throwable->getLine(),
-                'trace'     => $trace,
-                'url'       => request()->fullUrl() ?? null,
-                'method'    => request()->method() ?? null,
-                'ip'        => request()->ip() ?? null,
-                'user_id'   => optional(auth()->user())->id,
+                'code' => $throwable->getCode(),
+                'message' => $throwable->getMessage(),
+                'file' => $throwable->getFile(),
+                'line' => $throwable->getLine(),
+                'trace' => $trace,
+                'url' => request()->fullUrl() ?? null,
+                'method' => request()->method() ?? null,
+                'ip' => request()->ip() ?? null,
+                'user_id' => optional(auth()->user())->id,
             ], true));
         }
 
         return response()->json([
-            'status'  => $status,
+            'status' => $status,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $status);
     }
 
@@ -62,9 +62,9 @@ class Responser
     public static function custom(int $status, string $message, mixed $data = [])
     {
         return response()->json([
-            'status'  => $status,
+            'status' => $status,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ], $status);
     }
 }

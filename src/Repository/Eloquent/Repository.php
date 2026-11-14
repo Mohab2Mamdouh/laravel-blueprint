@@ -1,18 +1,26 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Repository\Eloquent;
+namespace BlueprintPhp\Laravel\Repository\Eloquent;
 
-use Mohab\LaravelBlueprint\Enums\QueryReturnType;
-use Mohab\LaravelBlueprint\Repository\Contracts\RepositoryInterface;
+use BlueprintPhp\Laravel\Enums\QueryReturnType;
+use BlueprintPhp\Laravel\Repository\Contracts\RepositoryInterface;
 use Exception;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @template TModel of Model
+ *
+ * @implements RepositoryInterface<TModel>
+ */
 abstract class Repository implements RepositoryInterface
 {
+    /** @var TModel */
     protected Model $model;
 
+    /** @param TModel $model */
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -21,13 +29,13 @@ abstract class Repository implements RepositoryInterface
     /**
      * Generic query builder with optional named scopes and flexible return types.
      *
-     * @param  array           $scopes      Named scopes to apply. Simple list or associative array with parameters.
-     * @param  array           $columns     Columns to select.
-     * @param  array           $relations   Eager-load relations.
-     * @param  QueryReturnType $returnType  How to return results (GET, FIRST, PAGINATE, QUERY).
-     * @param  int             $perPage     Items per page (only used when $returnType is PAGINATE).
-     * @param  string          $order       Order direction: ASC or DESC.
-     * @param  string          $orderBy     Column to order by.
+     * @param  array  $scopes  Named scopes to apply. Simple list or associative array with parameters.
+     * @param  array  $columns  Columns to select.
+     * @param  array  $relations  Eager-load relations.
+     * @param  QueryReturnType  $returnType  How to return results (GET, FIRST, PAGINATE, QUERY).
+     * @param  int  $perPage  Items per page (only used when $returnType is PAGINATE).
+     * @param  string  $order  Order direction: ASC or DESC.
+     * @param  string  $orderBy  Column to order by.
      *
      * @example
      * // Get all with named scopes
@@ -66,14 +74,14 @@ abstract class Repository implements RepositoryInterface
         foreach ($scopes as $scope => $parameters) {
             if (is_numeric($scope)) {
                 // No parameters: ['active', 'verified']
-                if ($this->model->hasNamedScope($parameters) || $query->hasMacro($parameters)) {
+                if ($this->isApplicableScope($query, $parameters)) {
                     $query = $query->{$parameters}();
                 }
             } else {
                 // With parameters: ['status' => 'active']
-                if ($this->model->hasNamedScope($scope) || $query->hasMacro($scope)) {
+                if ($this->isApplicableScope($query, $scope)) {
                     $params = is_array($parameters) ? $parameters : [$parameters];
-                    $query  = $query->{$scope}(...$params);
+                    $query = $query->{$scope}(...$params);
                 }
             }
         }
@@ -81,33 +89,49 @@ abstract class Repository implements RepositoryInterface
         $query = $query->orderBy($orderBy, $order);
 
         return match ($returnType) {
-            QueryReturnType::GET             => $query->get(),
-            QueryReturnType::FIRST           => $query->first(),
-            QueryReturnType::PAGINATE        => $query->paginate(request('per_page', $perPage)),
+            QueryReturnType::GET => $query->get(),
+            QueryReturnType::FIRST => $query->first(),
+            QueryReturnType::FIRST_OR_FAIL => $query->firstOrFail(),
+            QueryReturnType::PAGINATE => $query->paginate(request('per_page', $perPage)),
             QueryReturnType::CURSOR_PAGINATE => $query->cursorPaginate(request('per_page', $perPage)),
-            QueryReturnType::QUERY           => $query,
+            QueryReturnType::QUERY => $query,
             // For PLUCK, pass the value (and optional key) column(s) via $columns,
             // e.g. query(columns: ['name', 'id'], returnType: PLUCK). Defaults to the
             // model's primary key when $columns is left as ['*'].
-            QueryReturnType::PLUCK           => $query->pluck(
+            QueryReturnType::PLUCK => $query->pluck(
                 $columns[0] === '*' ? $this->model->getKeyName() : $columns[0],
                 $columns[1] ?? null,
             ),
-            QueryReturnType::COUNT           => $query->count(),
-            QueryReturnType::EXISTS          => $query->exists(),
+            QueryReturnType::COUNT => $query->count(),
+            QueryReturnType::EXISTS => $query->exists(),
         };
     }
 
+    /**
+     * Whether a scope name is callable on the query: a model named scope, a
+     * local macro, or a GLOBAL Eloquent Builder macro (e.g. `byKeywords`,
+     * registered via Builder::macro — hasMacro() alone misses these).
+     */
+    private function isApplicableScope(Builder $query, string $name): bool
+    {
+        return $this->model->hasNamedScope($name)
+            || $query->hasMacro($name)
+            || Builder::hasGlobalMacro($name);
+    }
+
+    /** @return Collection<int, TModel> */
     public function getAll(array $columns = ['*'], array $relations = []): Collection
     {
         return $this->model->with($relations)->get($columns);
     }
 
+    /** @return Collection<int, TModel> */
     public function getActive(array $columns = ['*'], array $relations = []): Collection
     {
         return $this->model->with($relations)->where('is_active', true)->get($columns);
     }
 
+    /** @return TModel|null */
     public function getById(
         $modelId,
         array $columns = ['*'],
@@ -117,6 +141,7 @@ abstract class Repository implements RepositoryInterface
         return $this->model->select($columns)->with($relations)->findOrFail($modelId)->append($appends);
     }
 
+    /** @return Collection<int, TModel> */
     public function get(
         $byColumn,
         $value,
@@ -126,6 +151,7 @@ abstract class Repository implements RepositoryInterface
         return $this->model::query()->select($columns)->with($relations)->where($byColumn, $value)->get();
     }
 
+    /** @return TModel|null */
     public function first(
         $byColumn,
         $value,
@@ -135,11 +161,13 @@ abstract class Repository implements RepositoryInterface
         return $this->model::query()->select($columns)->with($relations)->where($byColumn, $value)->first();
     }
 
+    /** @return TModel|null */
     public function getFirst(): ?Model
     {
         return $this->model->first();
     }
 
+    /** @return TModel|null */
     public function create(array $payload): ?Model
     {
         $model = $this->model->create($payload);
@@ -147,6 +175,7 @@ abstract class Repository implements RepositoryInterface
         return $model->fresh();
     }
 
+    /** @return TModel|null */
     public function updateOrCreate(array $attributes, array $values = [], bool $withTrashed = false): ?Model
     {
         if ($withTrashed) {
@@ -154,7 +183,7 @@ abstract class Repository implements RepositoryInterface
         }
 
         $model = $this->model::query()
-            ->when($withTrashed, fn($query) => $query->withTrashed())
+            ->when($withTrashed, fn ($query) => $query->withTrashed())
             ->updateOrCreate($attributes, $values);
 
         return $model->fresh();
@@ -171,12 +200,14 @@ abstract class Repository implements RepositoryInterface
             foreach ($payload as $record) {
                 $this->model::query()->create($record);
             }
+
             return true;
         } catch (Exception $e) {
             return false;
         }
     }
 
+    /** @return TModel|null */
     public function update($modelId, array $payload): ?Model
     {
         $model = $this->getById($modelId);
@@ -186,6 +217,7 @@ abstract class Repository implements RepositoryInterface
             : null;
     }
 
+    /** @param TModel|int $modelId */
     public function delete(Model|int $modelId): bool
     {
         $model = $modelId instanceof Model ? $modelId : $this->getById($modelId);
@@ -210,6 +242,7 @@ abstract class Repository implements RepositoryInterface
         return $model->restore();
     }
 
+    /** @return LengthAwarePaginator<int, TModel> */
     public function paginate(int $perPage = 10, array $relations = [], $orderBy = 'ASC', $columns = ['*'])
     {
         return $this->model::query()
@@ -219,6 +252,7 @@ abstract class Repository implements RepositoryInterface
             ->paginate(request('per_page', $perPage));
     }
 
+    /** @return LengthAwarePaginator<int, TModel> */
     public function paginateWithQuery(
         $query,
         int $perPage = 10,
@@ -234,11 +268,13 @@ abstract class Repository implements RepositoryInterface
             ->paginate(request('per_page', $perPage));
     }
 
+    /** @return Collection<int, TModel> */
     public function whereHasMorph($relation, $class)
     {
         return $this->model::query()->whereHasMorph($relation, $class)->get();
     }
 
+    /** @return TModel|null */
     public function sync($modelId, string $relation, array $ids, bool $detaching = true): ?Model
     {
         $model = $this->getById($modelId);
@@ -248,6 +284,7 @@ abstract class Repository implements RepositoryInterface
         return $model->fresh();
     }
 
+    /** @return TModel|null */
     public function getByUuid(string $uuid, array $columns = ['*'], array $relations = []): ?Model
     {
         return $this->model::query()
@@ -262,6 +299,7 @@ abstract class Repository implements RepositoryInterface
         return $this->model::query()->where('id', $modelId)->touch($column);
     }
 
+    /** @return Collection<int, TModel> */
     public function getByIds(array $ids, array $columns = ['*'], array $relations = [])
     {
         return $this->model::query()
@@ -272,6 +310,7 @@ abstract class Repository implements RepositoryInterface
             ->keyBy('id');
     }
 
+    /** @return TModel */
     public function firstOrCreate(array $attributes = [], array $values = [])
     {
         return $this->model::query()->firstOrCreate($attributes, $values);

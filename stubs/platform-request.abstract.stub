@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use BlueprintPhp\Laravel\Http\Requests\PlatformRequest;
+
+abstract class {{ class }} extends PlatformRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            // TODO: Add validation rules
+        ];
+    }
+}

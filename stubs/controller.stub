@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ RootNamespace }}\Http\Controllers\V{{ Version }};
+
+use App\Http\Controllers\Controller;
+use {{ RootNamespace }}\Http\Services\V{{ Version }}\{{ PatternName }}Service;
+use Illuminate\Http\Request;
+
+class {{ ControllerName }}Controller extends Controller
+{
+    public function __construct(
+        private readonly {{ PatternName }}Service $service
+    ) {}
+
+}

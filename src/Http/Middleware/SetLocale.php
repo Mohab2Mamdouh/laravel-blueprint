@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Http\Middleware;
+namespace BlueprintPhp\Laravel\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

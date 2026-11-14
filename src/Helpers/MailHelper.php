@@ -1,10 +1,8 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Helpers;
+namespace BlueprintPhp\Laravel\Helpers;
 
 use Illuminate\Http\JsonResponse;
-
-use Mohab\LaravelBlueprint\Helpers\LogHelper;
 use Symfony\Component\HttpFoundation\Response;
 
 class MailHelper
@@ -17,23 +15,26 @@ class MailHelper
      */
     public static function canConnect(): bool
     {
-        $host    = config('mail.mailers.smtp.host');
-        $port    = (int) config('mail.mailers.smtp.port');
+        $host = config('mail.mailers.smtp.host');
+        $port = (int) config('mail.mailers.smtp.port');
         $timeout = (int) config('mail.mailers.smtp.timeout', 5);
 
         if (empty($host) || empty($port)) {
             LogHelper::warning('MailHelper: SMTP host or port is not configured.');
+
             return false;
         }
 
         $connection = @fsockopen($host, $port, $errno, $errstr, $timeout);
 
-        if (!$connection) {
+        if (! $connection) {
             LogHelper::warning("MailHelper: Cannot reach SMTP server at {$host}:{$port} — [{$errno}] {$errstr}");
+
             return false;
         }
 
         fclose($connection);
+
         return true;
     }
 
@@ -45,12 +46,12 @@ class MailHelper
      *
      *   if ($guard = MailHelper::guard()) return $guard;
      *
-     * @param  string $message  Custom failure message shown in the API response
-     * @param  int    $status   HTTP status code for the failure response
+     * @param  string  $message  Custom failure message shown in the API response
+     * @param  int  $status  HTTP status code for the failure response
      */
     public static function guard(
         string $message = 'Mail service is currently unavailable. Please try again later.',
-        int    $status  = Response::HTTP_SERVICE_UNAVAILABLE,
+        int $status = Response::HTTP_SERVICE_UNAVAILABLE,
     ): ?JsonResponse {
         if (static::canConnect()) {
             return null;

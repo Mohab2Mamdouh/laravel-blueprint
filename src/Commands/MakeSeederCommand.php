@@ -1,7 +1,8 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Commands;
+namespace BlueprintPhp\Laravel\Commands;
 
+use BlueprintPhp\Laravel\BlueprintServiceProvider;
 use Illuminate\Console\GeneratorCommand;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Input\InputArgument;
@@ -11,22 +12,31 @@ class MakeSeederCommand extends GeneratorCommand
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'make:seeder {name}';
+    protected $signature = 'make:seeder {name}
+                            {--central : Create the seeder under database/seeders/central}
+                            {--tenant : Create the seeder under database/seeders/tenant}';
 
-    protected $description = 'Create a new seeder class with a timestamp prefix for tenant databases';
+    protected $description = 'Create a new timestamp-prefixed tracked seeder (target from blueprint.seeders.default_target; --central/--tenant override)';
 
     protected $type = 'Seeder';
 
     protected function getPath($name): string
     {
-        $timestampName = time() . '_' . Str::replaceFirst($this->rootNamespace(), '', $name);
+        $tenant = match (true) {
+            (bool) $this->option('central') => false,
+            (bool) $this->option('tenant') => true,
+            default => config('blueprint.seeders.default_target', 'central') === 'tenant',
+        };
 
-        return database_path('seeders/RunningSeeder') . '/' . str_replace('\\', '/', $timestampName) . '.php';
+        $dir = $tenant ? 'seeders/tenant' : 'seeders/central';
+        $timestampName = time().'_'.Str::replaceFirst($this->rootNamespace(), '', $name);
+
+        return database_path($dir).'/'.str_replace('\\', '/', $timestampName).'.php';
     }
 
     protected function getStub(): string
     {
-        return __DIR__ . '/stubs/seeder.stub';
+        return BlueprintServiceProvider::stubPath('seeder.stub');
     }
 
     protected function getDefaultNamespace($rootNamespace): string

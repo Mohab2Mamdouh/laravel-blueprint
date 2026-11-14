@@ -1,0 +1,88 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Http\Request;
+use BlueprintPhp\Laravel\Service\PlatformService;
+use BlueprintPhp\Laravel\Enums\QueryReturnType;
+use BlueprintPhp\Laravel\Helpers\Responser;
+use {{ repo_interface_namespace }}\{{ name_class }}RepositoryInterface;
+{{ extra_imports }}
+
+abstract class {{ class }} extends PlatformService
+{
+    public function __construct(
+        private readonly {{ name_class }}RepositoryInterface ${{ name }}Repository,
+    ) {}
+
+    public function index(Request $request)
+    {
+        ${{ name_plural }} = $this->{{ name }}Repository->query(
+            scopes: $request->input('scopes', []),
+            returnType: QueryReturnType::PAGINATE
+        );
+
+        return Responser::success(
+            message: __('Retrieved successfully'),
+            data: {{ name_class }}AbstractResource::collection(${{ name_plural }})->response()->getData()
+        );
+    }
+
+    public function getAll()
+    {
+        ${{ name_plural }} = $this->{{ name }}Repository->query(
+            returnType: QueryReturnType::GET
+        );
+
+        return Responser::success(
+            message: __('Retrieved successfully'),
+            data: {{ name_class }}AbstractResource::collection(${{ name_plural }})
+        );
+    }
+
+    public function show($id)
+    {
+        ${{ name }} = $this->{{ name }}Repository->getById($id);
+
+        return Responser::success(
+            message: __('Retrieved successfully'),
+            data: {{ name_class }}AbstractResource::make(${{ name }})
+        );
+    }
+
+    public function store({{ name_class }}AbstractRequest $request)
+    {
+        $data = $request->validated();
+        ${{ name }} = $this->{{ name }}Repository->create($data);
+
+        return Responser::success(
+            message: __('Created successfully'),
+            data: {{ name_class }}AbstractResource::make(${{ name }})
+        );
+    }
+
+    public function update({{ name_class }}AbstractRequest $request, $id)
+    {
+        $data = $request->validated();
+        ${{ name }} = $this->{{ name }}Repository->update($id, $data);
+
+        return Responser::success(
+            message: __('Updated successfully'),
+            data: {{ name_class }}AbstractResource::make(${{ name }})
+        );
+    }
+
+    public function destroy($id)
+    {
+        $this->{{ name }}Repository->delete($id);
+
+        return Responser::success(message: __('Deleted successfully'));
+    }
+
+    public function restore($id)
+    {
+        $this->{{ name }}Repository->restore($id);
+
+        return Responser::success(message: __('Restored successfully'));
+    }
+}

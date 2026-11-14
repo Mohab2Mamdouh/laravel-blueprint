@@ -1,13 +1,13 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-trait BelongsToUser {
-
+trait BelongsToUser
+{
     protected static function bootBelongsToUser(): void
     {
         static::creating(function ($model) {
@@ -35,7 +35,7 @@ trait BelongsToUser {
     public function user(): BelongsTo
     {
         return $this->belongsTo(
-            config('auth.providers.users.model', \App\Models\User::class),
+            config('auth.providers.users.model', 'App\\Models\\User'),
             'user_id',
         );
     }

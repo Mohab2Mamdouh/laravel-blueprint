@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 trait HasMeta
 {
@@ -53,7 +53,7 @@ trait HasMeta
      */
     public function setMeta(string $key, mixed $value): bool
     {
-        $meta       = $this->getAllMeta();
+        $meta = $this->getAllMeta();
         $meta[$key] = $value;
 
         return $this->persistMeta($meta);
@@ -62,7 +62,7 @@ trait HasMeta
     /**
      * Merge an array of key→value pairs into the existing meta and persist.
      *
-     * @param  array<string, mixed> $values
+     * @param  array<string, mixed>  $values
      */
     public function mergeMeta(array $values): bool
     {
@@ -97,6 +97,7 @@ trait HasMeta
     private function persistMeta(array $meta): bool
     {
         $this->{$this->metaColumn()} = $meta;
+
         return $this->save();
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 
@@ -124,7 +124,7 @@ trait Filterable
         $rangeFilters = $this->rangeFilters ?? [];
 
         foreach ($rangeFilters as $inputKey => $column) {
-            if (!isset($filters[$inputKey]) || $filters[$inputKey] === '') {
+            if (! isset($filters[$inputKey]) || $filters[$inputKey] === '') {
                 continue;
             }
 
@@ -141,19 +141,19 @@ trait Filterable
 
     private function applySorting(Builder $query, array $filters): void
     {
-        $sortBy  = $filters['sort_by'] ?? null;
+        $sortBy = $filters['sort_by'] ?? null;
         $sortDir = in_array(strtolower($filters['sort_dir'] ?? ''), ['asc', 'desc'])
             ? strtolower($filters['sort_dir'])
             : 'asc';
 
-        if (!$sortBy) {
+        if (! $sortBy) {
             return;
         }
 
         $sortable = $this->sortable ?? [];
 
         // When $sortable is declared, only allow listed columns to prevent SQL injection.
-        if (!empty($sortable) && !in_array($sortBy, $sortable)) {
+        if (! empty($sortable) && ! in_array($sortBy, $sortable)) {
             return;
         }
 

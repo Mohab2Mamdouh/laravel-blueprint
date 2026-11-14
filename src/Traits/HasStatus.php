@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 
@@ -48,7 +48,7 @@ trait HasStatus
 
     public function isInactive(): bool
     {
-        return !$this->isActive();
+        return ! $this->isActive();
     }
 
     // -------------------------------------------------------------------------
@@ -76,6 +76,7 @@ trait HasStatus
     public function setStatus(string $status): bool
     {
         $this->{$this->statusColumn()} = $status;
+
         return $this->save();
     }
 

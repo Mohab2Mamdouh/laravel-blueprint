@@ -36,6 +36,35 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Settings
+    |--------------------------------------------------------------------------
+    | Where the getSettings() helper reads application settings from.
+    | - `repository`: a class or container-bound interface exposing
+    |   `settings(): array` (see BlueprintPhp\Laravel\Contracts\ProvidesSettings).
+    |   Leave null when the app has no settings store — getSettings() then
+    |   returns an empty array.
+    | - `table`: the settings table; nothing is read until it exists.
+    */
+    'settings' => [
+        'repository' => null,
+        'table' => 'settings',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tracked seeders
+    |--------------------------------------------------------------------------
+    | Which database the `seed`, `seed:*` and `make:seeder` commands target when
+    | neither --central nor --tenant is passed: 'central' reads
+    | database/seeders/central, 'tenant' reads database/seeders/tenant and runs
+    | in every tenant database (requires stancl/tenancy).
+    */
+    'seeders' => [
+        'default_target' => env('SEEDER_TARGET', 'central'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache
     |--------------------------------------------------------------------------
     | Settings related to caching values the package exposes to views.

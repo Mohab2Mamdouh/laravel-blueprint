@@ -1,6 +1,6 @@
 <?php
 
-namespace Mohab\LaravelBlueprint\Traits;
+namespace BlueprintPhp\Laravel\Traits;
 
 trait Enumable
 {
@@ -31,6 +31,6 @@ trait Enumable
             }
         }
 
-        throw new \ValueError("'{$name}' is not a valid name for enum " . static::class);
+        throw new \ValueError("'{$name}' is not a valid name for enum ".static::class);
     }
 }

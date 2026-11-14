@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ RootNamespace }}\Models;
+
+use BlueprintPhp\Laravel\Models\BaseModel;
+
+class {{ PatternName }} extends BaseModel
+{
+    protected $guarded = [];
+
+    /**
+     * Columns searched by the byKeywords() query macro.
+     *
+     * @return array<int, string>
+     */
+    public function getSearchableColumns(): array
+    {
+        return ['name'];
+    }
+}
