@@ -71,20 +71,7 @@ abstract class Repository implements RepositoryInterface
     ) {
         $query = $this->model::query()->select($columns)->with($relations);
 
-        foreach ($scopes as $scope => $parameters) {
-            if (is_numeric($scope)) {
-                // No parameters: ['active', 'verified']
-                if ($this->isApplicableScope($query, $parameters)) {
-                    $query = $query->{$parameters}();
-                }
-            } else {
-                // With parameters: ['status' => 'active']
-                if ($this->isApplicableScope($query, $scope)) {
-                    $params = is_array($parameters) ? $parameters : [$parameters];
-                    $query = $query->{$scope}(...$params);
-                }
-            }
-        }
+        $query = $this->applyScopes($query, $scopes);
 
         $query = $query->orderBy($orderBy, $order);
 
@@ -92,8 +79,15 @@ abstract class Repository implements RepositoryInterface
             QueryReturnType::GET => $query->get(),
             QueryReturnType::FIRST => $query->first(),
             QueryReturnType::FIRST_OR_FAIL => $query->firstOrFail(),
-            QueryReturnType::PAGINATE => $query->paginate(request('per_page', $perPage)),
-            QueryReturnType::CURSOR_PAGINATE => $query->cursorPaginate(request('per_page', $perPage)),
+            // Ties on a non-unique sort column make LIMIT/OFFSET unstable: a row repeats on
+            // one page and is missing from another. Append the key as a tiebreaker.
+            QueryReturnType::PAGINATE => $query
+                ->when($orderBy !== $this->model->getKeyName(), fn (Builder $query) => $query->orderBy($this->model->getQualifiedKeyName(), $order))
+                ->paginate(request('per_page', $perPage)),
+            // Cursor pagination needs a deterministic order for the same reason.
+            QueryReturnType::CURSOR_PAGINATE => $query
+                ->when($orderBy !== $this->model->getKeyName(), fn (Builder $query) => $query->orderBy($this->model->getQualifiedKeyName(), $order))
+                ->cursorPaginate(request('per_page', $perPage)),
             QueryReturnType::QUERY => $query,
             // For PLUCK, pass the value (and optional key) column(s) via $columns,
             // e.g. query(columns: ['name', 'id'], returnType: PLUCK). Defaults to the
@@ -108,13 +102,65 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
+     * Apply a scopes array to ANY builder of this repository's model — including a
+     * relation's builder, which is why it takes the query instead of reading
+     * `$this->model`: constraining an eager load (`with(['items' => …])`) or a
+     * `whereHas` subquery has to run the same named scopes the listing does, or the
+     * two disagree about what a filter means.
+     *
+     * - Scopes run in the model's declared order when it uses AcceptedScopes
+     *   (`orderScopes()`), not in request order.
+     * - An entry the model does not recognise (named scope, local or global
+     *   builder macro) is skipped, never fatal.
+     * - Only a LIST-shaped parameter is spread as varargs; any other value —
+     *   including a string-keyed array — is passed as one argument, so
+     *   `?scopes[byFrom][x]=1` cannot become a named argument and 500.
+     *
+     * Callers taking scopes from a request should still whitelist them against
+     * the model's `acceptedScopes()`: builder macros such as SoftDeletes'
+     * `onlyTrashed` are callable here by design.
+     *
+     * @param  Builder<TModel>  $query
+     * @param  array<int|string, mixed>  $scopes
+     * @return Builder<TModel>
+     */
+    public function applyScopes(Builder $query, array $scopes): Builder
+    {
+        $model = $query->getModel();
+
+        if (method_exists($model, 'orderScopes')) {
+            $scopes = $model->orderScopes($scopes);
+        }
+
+        foreach ($scopes as $scope => $parameters) {
+            if (is_int($scope)) {
+                // No parameters: ['active', 'verified']
+                if (is_string($parameters) && $this->isApplicableScope($query, $parameters)) {
+                    $query = $query->{$parameters}();
+                }
+
+                continue;
+            }
+
+            // With parameters: ['status' => 'active'] or ['byIds' => [1, 2]]
+            if ($this->isApplicableScope($query, $scope)) {
+                $params = is_array($parameters) && array_is_list($parameters) ? $parameters : [$parameters];
+                $query = $query->{$scope}(...$params);
+            }
+        }
+
+        return $query;
+    }
+
+    /**
      * Whether a scope name is callable on the query: a model named scope, a
      * local macro, or a GLOBAL Eloquent Builder macro (e.g. `byKeywords`,
-     * registered via Builder::macro — hasMacro() alone misses these).
+     * registered via Builder::macro — hasMacro() alone misses these). Reads the
+     * model off the query so it also works on a relation's builder.
      */
     private function isApplicableScope(Builder $query, string $name): bool
     {
-        return $this->model->hasNamedScope($name)
+        return $query->getModel()->hasNamedScope($name)
             || $query->hasMacro($name)
             || Builder::hasGlobalMacro($name);
     }

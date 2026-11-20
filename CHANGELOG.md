@@ -4,6 +4,25 @@ All notable changes to `blueprint-php/laravel` are documented here. The format f
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [3.1.0] - 2026-11-20
+
+### Added
+- `Repository::applyScopes(Builder $query, array $scopes)` (also on `RepositoryInterface`): applies a
+  scopes array to any builder of the repository's model — a relation's or a `whereHas` subquery's
+  included — so a listing and its constrained eager load run the same filters.
+
+### Changed
+- `query()` now runs scopes through `applyScopes()`: in the model's declared order when it uses
+  `AcceptedScopes` (`orderScopes()` was previously never called), and only a LIST-shaped parameter
+  is spread as varargs. A string-keyed array is passed as one argument, so a request such as
+  `?scopes[byFrom][x]=1` can no longer become a named argument and fail with a 500.
+- `PAGINATE` and `CURSOR_PAGINATE` append the primary key as a tiebreaker when sorting by another
+  column, so rows no longer repeat or go missing across pages on ties.
+
+### Note
+- Builder macros (e.g. SoftDeletes' `onlyTrashed`) remain callable by design: whitelist request
+  scopes against the model's `acceptedScopes()` before passing them in.
+
 ## [3.0.0] - 2026-11-14
 
 ### Changed

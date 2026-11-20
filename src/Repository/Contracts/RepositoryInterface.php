@@ -23,6 +23,13 @@ interface RepositoryInterface
         string $orderBy = 'id'
     );
 
+    /**
+     * Apply a scopes array to any builder of the repository's model (a relation's included).
+     *
+     * @param  array<int|string, mixed>  $scopes
+     */
+    public function applyScopes(Builder $query, array $scopes): Builder;
+
     /** @return Collection<int, TModel> */
     public function getAll(array $columns = ['*'], array $relations = []): Collection;
 
